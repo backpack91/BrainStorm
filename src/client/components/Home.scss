@@ -1,0 +1,255 @@
+.home {
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(to bottom right, #FF5722, #F4511E);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+  .homeContentsWrapper {
+    font-weight: 700;
+    font-family: 'Alfa Slab One', cursive;
+    width: 50%;
+    height: 60%;
+
+    .bulb {
+      transition: all 0.5s ease-out;
+      position: absolute;
+      top: -10%;
+      height: -20%;
+      color: white;
+      font-size: 49rem;
+    }
+
+    .homeTitleWrapper {
+      position: relative;
+      color: white;
+      width: 100%;
+      height: 40%;
+
+      .title{
+        transition: all 1s ease-out;
+        position: absolute;
+        font-size: 5rem;
+      }
+
+      .title_1 {
+        left: -1rem;
+      }
+
+      .title_2 {
+        top: 6rem;
+        left: -1rem;
+      }
+    }
+
+    .roomUrlWrapper {
+      position: relative;
+      top: 3rem;
+      left: -1rem;
+      width: 25rem;
+      height: 50%;
+
+      .roomUrl {
+        transition: all 1s ease-out;
+        font-weight: 400;
+        font-family: 'Alegreya Sans', sans-serif;
+        z-index: 5;
+        border-radius: 25rem;
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: left;
+        padding: 1rem;
+        color: yellow;
+        border: solid 1rem yellow;
+        width: 23rem;
+
+        input {
+          border: none;
+          width: 50%;
+          height: 2rem;
+          margin-left: 1rem;
+          border-radius: 0.2rem;
+          font-size: 1.5rem;
+        }
+
+        input:focus {
+          outline: none;
+        }
+      }
+    }
+    .createBtnWrapper {
+      position: relative;
+      width: 100%;
+      height: 10rem;
+      display: flex;
+      justify-content: flex-start;
+      font-family: 'Alegreya Sans', sans-serif;
+
+      a {
+        color: white;
+        width: 4rem;
+        height: 4rem;
+        text-decoration: none;
+        text-decoration: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+      }
+
+      a:visited {
+        color: white;
+        width: 4rem;
+        height: 4rem;
+        text-decoration: none;
+        text-decoration: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .button {
+        transition: all 0.5s ease-out;
+        position: absolute;
+        top: -4rem;
+        left: -1rem;
+        width: 13rem;
+        height: 4rem;
+        z-index: 5;
+        border: solid 1rem white;
+        border-radius: 25rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+  }
+
+  .homeContentsWrapper:hover {
+    font-weight: 700;
+    font-family: 'Alfa Slab One', cursive;
+    width: 50%;
+    height: 60%;
+
+    .bulb {
+      transform: all 0.5s ease-out;
+      position: absolute;
+      top: -10%;
+      height: -20%;
+      color: yellow;
+      font-size: 49rem;
+      transform:rotate(15deg);
+    }
+
+    .homeTitleWrapper {
+      position: relative;
+      color: yellow;
+      width: 100%;
+      height: 40%;
+
+      .title{
+        transition: all 1s ease-out;
+        position: absolute;
+        font-size: 5rem;
+      }
+
+      .title_1 {
+        left: -1rem;
+      }
+
+      .title_2 {
+        top: 6rem;
+        left: -1rem;
+      }
+    }
+
+    .roomUrlWrapper {
+      position: relative;
+      top: 3rem;
+      left: -1rem;
+      width: 25rem;
+      height: 50%;
+
+      .roomUrl {
+        transition: all 1s ease-out;
+        font-weight: 400;
+        font-family: 'Alegreya Sans', sans-serif;
+        z-index: 5;
+        border-radius: 25rem;
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: left;
+        padding: 1rem;
+        color: yellow;
+        border: solid 1rem white;
+
+        input {
+          border: none;
+          width: 50%;
+          height: 2rem;
+          margin-left: 1rem;
+          border-radius: 0.2rem;
+          font-size: 1.5rem;
+        }
+
+        input:focus {
+          outline: none;
+        }
+      }
+    }
+    .createBtnWrapper {
+      position: relative;
+      width: 100%;
+      height: 10rem;
+      display: flex;
+      justify-content: flex-start;
+      font-family: 'Alegreya Sans', sans-serif;
+
+      a {
+        color: white;
+        height: 4rem;
+        text-decoration: none;
+        text-decoration: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+      }
+
+      a:visited {
+        color: white;
+        height: 4rem;
+        text-decoration: none;
+        text-decoration: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .button {
+        transform: all 0.5s ease-out;
+        position: absolute;
+        top: -4rem;
+        left: -1rem;
+        width: 25rem;
+        height: 4rem;
+        z-index: 5;
+        border: solid 1rem yellow;
+        border-radius: 25rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+  }
+}
