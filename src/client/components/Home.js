@@ -5,6 +5,12 @@ import {Link} from 'react-router-dom';
 export default class Home extends Component{
 
   render() {
+    const {
+      createNewRoom,
+      getRoomTitle,
+      roomTitle
+    } = this.props;
+
     return (
       <div className='home'>
         <div className='homeContentsWrapper'>
@@ -15,15 +21,13 @@ export default class Home extends Component{
           <div className='roomUrlWrapper'>
             <div className='roomUrl'>
               <span>www.brainstorm.com/</span>
-              <input placeholder='your room name'></input>
+              <input placeholder='방이름을 입력해 주세요' onChange={getRoomTitle}></input>
             </div>
           </div>
           <div className='createBtnWrapper'>
-            <Link to='/room/123123'>
-              <div className='button'>
-                Create!
-              </div>
-            </Link>
+            <div className='button' onClick={createNewRoom.bind(null, roomTitle)}>
+              Create new room!
+            </div>
           </div>
           <i className="far fa-lightbulb bulb"></i>
         </div>
@@ -31,6 +35,3 @@ export default class Home extends Component{
     );
   }
 }
-
-
-// <Link to='/room/123123'>

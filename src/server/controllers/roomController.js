@@ -1,11 +1,14 @@
 const Room = require('../models/rooms.js');
 const mongoose = require('mongoose');
+const { renderToString } = 'react-dom/server';
 
 const ObjectId = mongoose.Types.ObjectId;
 
 const createNewRoom = async function (req, res, next) {
+  console.log('req.params>>>>>>', req.params);
   try {
-    const roomFound = await Room.findOne({title: req.params.room_title});
+    const room_title = String(req.params.room_title);
+    const roomFound = await Room.findOne({title: room_title});
 
     if (
       roomFound !== null
@@ -15,15 +18,16 @@ const createNewRoom = async function (req, res, next) {
       res.sendStatus(204);
     } else {
       const _id = new ObjectId();
+      console.log('_id', _id);
       const roomCreation = await Room.create({
         _id,
-        title: roomFound.title,
+        title: room_title,
         board_infos: [],
         user_ids: []
       });
 
       res.json({
-        title: roomFound.title,
+        title: room_title,
         board_infos: [],
         user_ids: []
       });
@@ -45,6 +49,10 @@ const sendInvitedRoomInfo = async function (req, res, next) {
   } catch(err) {
     next(err);
   }
+}
+
+const renderSharingBoard = async function (req, res, next) {
+
 }
 
 module.exports = {

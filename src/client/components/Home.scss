@@ -8,7 +8,7 @@
   position: relative;
 
   .homeContentsWrapper {
-    font-weight: 700;
+    font-weight: 500;
     font-family: 'Alfa Slab One', cursive;
     width: 50%;
     height: 60%;
@@ -66,8 +66,12 @@
         text-align: left;
         padding: 1rem;
         color: yellow;
-        border: solid 1rem yellow;
+        border: solid 0.3rem yellow;
         width: 23rem;
+
+        ::placeholder {
+          color: orange;
+        }
 
         input {
           border: none;
@@ -75,7 +79,8 @@
           height: 2rem;
           margin-left: 1rem;
           border-radius: 0.2rem;
-          font-size: 1.5rem;
+          font-size: 1rem;
+          color: orange;
         }
 
         input:focus {
@@ -91,7 +96,7 @@
       justify-content: flex-start;
       font-family: 'Alegreya Sans', sans-serif;
 
-      a {
+
         color: white;
         width: 4rem;
         height: 4rem;
@@ -101,7 +106,7 @@
         justify-content: center;
         align-items: center;
         font-size: 1.5rem;
-      }
+
 
       a:visited {
         color: white;
@@ -122,7 +127,7 @@
         width: 13rem;
         height: 4rem;
         z-index: 5;
-        border: solid 1rem white;
+        border: solid 0.3rem white;
         border-radius: 25rem;
         display: flex;
         justify-content: center;
@@ -132,7 +137,7 @@
   }
 
   .homeContentsWrapper:hover {
-    font-weight: 700;
+    font-weight: 500;
     font-family: 'Alfa Slab One', cursive;
     width: 50%;
     height: 60%;
@@ -142,14 +147,14 @@
       position: absolute;
       top: -10%;
       height: -20%;
-      color: yellow;
+      color: gold;
       font-size: 49rem;
       transform:rotate(15deg);
     }
 
     .homeTitleWrapper {
       position: relative;
-      color: yellow;
+      color: gold;
       width: 100%;
       height: 40%;
 
@@ -190,8 +195,12 @@
         align-items: center;
         text-align: left;
         padding: 1rem;
-        color: yellow;
-        border: solid 1rem white;
+        color: white;
+        border: solid 0.3rem white;
+
+        ::placeholder {
+          color: orange;
+        }
 
         input {
           border: none;
@@ -199,7 +208,8 @@
           height: 2rem;
           margin-left: 1rem;
           border-radius: 0.2rem;
-          font-size: 1.5rem;
+          font-size: 1rem;
+          color: orange;
         }
 
         input:focus {
@@ -214,29 +224,12 @@
       display: flex;
       justify-content: flex-start;
       font-family: 'Alegreya Sans', sans-serif;
-
-      a {
-        color: white;
-        height: 4rem;
-        text-decoration: none;
-        text-decoration: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.5rem;
-      }
-
-      a:visited {
-        color: white;
-        height: 4rem;
-        text-decoration: none;
-        text-decoration: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
+      color: white;
+      height: 4rem;
+      font-size: 1.5rem;
 
       .button {
+        cursor: pointer;
         transform: all 0.5s ease-out;
         position: absolute;
         top: -4rem;
@@ -244,8 +237,9 @@
         width: 25rem;
         height: 4rem;
         z-index: 5;
-        border: solid 1rem yellow;
+        border: solid 0.3rem orange;
         border-radius: 25rem;
+        background-color: orange;
         display: flex;
         justify-content: center;
         align-items: center;
