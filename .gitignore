@@ -1,6 +1,6 @@
 .vscode
 dist
-/src/server/config/credentials.js
+src/server/config/credentials.js
 yarn.lock
 
 ### macOS ###
