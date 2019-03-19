@@ -3,6 +3,7 @@ import './Home.scss';
 import {Link} from 'react-router-dom';
 
 export default class Home extends Component{
+
   render() {
     return (
       <div className='home'>
@@ -18,7 +19,7 @@ export default class Home extends Component{
             </div>
           </div>
           <div className='createBtnWrapper'>
-            <Link to='/' >
+            <Link to='/room/123123'>
               <div className='button'>
                 Create!
               </div>
@@ -30,3 +31,6 @@ export default class Home extends Component{
     );
   }
 }
+
+
+// <Link to='/room/123123'>

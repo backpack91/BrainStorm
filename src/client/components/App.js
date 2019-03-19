@@ -10,7 +10,8 @@ class App extends Component {
     return (
       <Router >
         <div className="appWrapper">
-          <Route path="/" render={() => <SharingBoard />} />
+          <Route exact path="/" render={() => <Home/>} />
+          <Route path="/room/:room_id" render={() => <SharingBoard />} />
         </div>
       </Router>
     );
@@ -18,3 +19,12 @@ class App extends Component {
 }
 
 export default App;
+
+
+//원래
+// <Route exact path="/" render={() => <Home/>} />
+// <Route path="/room/:room_id" render={() => <SharingBoard />} />
+
+
+//스케치 보기
+// <Route path="/" render={() => <SharingBoard />} />
