@@ -24,7 +24,7 @@ export default class Home extends Component{
               </div>
             </Link>
           </div>
-          <i class="far fa-lightbulb bulb"></i>
+          <i className="far fa-lightbulb bulb"></i>
         </div>
       </div>
     );

@@ -40,13 +40,13 @@ class DecorationMenu extends Component {
           <h3>Contents</h3>
           <div className="iconsWrapper">
             <div className="iconWrapper">
-              <i class="fas fa-stamp"></i>
+              <i className="fas fa-stamp"></i>
             </div>
-            <div class="iconWrapper">
-              <i class="far fa-image"></i>
+            <div className="iconWrapper">
+              <i className="far fa-image"></i>
             </div>
-            <div class="iconWrapper">
-              <i class="far fa-file-video"></i>
+            <div className="iconWrapper">
+              <i className="far fa-file-video"></i>
             </div>
           </div>
         </div>

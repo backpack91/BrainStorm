@@ -11,7 +11,7 @@ export default class SharingBoard extends Component{
         <div className="logo">
           <div className="upperText">BRAIN</div>
           <div>STORM</div>
-          <i class="far fa-lightbulb bulb"></i>
+          <i className="far fa-lightbulb bulb"></i>
         </div>
         <Footer />
         <DecorationMenu />
