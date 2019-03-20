@@ -1,0 +1,54 @@
+.postIt {
+  top: 35%;
+  left: 35%;
+  min-width: 7rem;
+  min-height: 4rem;
+  position: absolute;
+  z-index: 9;
+  background-color: gold;
+  border: 1px solid orange;
+  text-align: center;
+  border-radius: 0.3rem;
+  box-shadow: rgba(219, 219, 219, 1) 0px 3px 8px 0px;
+
+  .postItHeader {
+    width: 100%;
+    height: 1.2rem;
+    // padding: 0.2rem;
+    cursor: move;
+    z-index: 10;
+    background-color: #ff8a65;
+    color: #fff;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+
+    i {
+      width: 1.3rem;
+      height: 1.3rem;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    i::before {
+
+    }
+  }
+
+  textarea {
+    padding: 1rem;
+    width: 7rem;
+    height: 3rem;
+    background-color: gold;
+    border: none;
+    font-size: 1.5rem;
+    color: gray;
+  }
+
+  textarea:focus {
+    outline-color: yellow;
+  }
+}

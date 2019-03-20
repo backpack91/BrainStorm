@@ -3,12 +3,18 @@ import {connect} from 'react-redux';
 import App from '../components/App.js';
 import axios from 'axios';
 import { createHashHistory } from 'history';
+import io from 'socket.io-client';
 import {
   roomCreation,
-  roomTitle
+  roomTitle,
 } from '../actions';
 
 class AppContainer extends Component {
+  componentDidMount() {
+    this.props.onMount();
+    const socket = io('http://localhost:8080');
+  }
+
   render() {
     return (
       <App appState={this.props} />
@@ -28,6 +34,12 @@ const mapDispatchToProps = (dispatch, props) => {
   const history = createHashHistory();
 
   return {
+    onMount: () => {
+      axios.get('/')
+      .then(res => {
+        console.log('onMount!!!!!!!!', res);
+      })
+    },
     createNewRoom: (room_title) => {
       axios.get(`/api/rooms/${room_title}/new`)
       .then(res => {

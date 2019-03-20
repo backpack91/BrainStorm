@@ -10,7 +10,8 @@ class App extends Component {
     const {
       createNewRoom,
       getRoomTitle,
-      room_title
+      room_title,
+      routeToRoom,
     } = this.props.appState;
 
     return (

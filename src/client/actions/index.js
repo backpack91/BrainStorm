@@ -1,6 +1,7 @@
 import {
   ROOM_CREATION,
-  ROOM_TITLE
+  ROOM_TITLE,
+  POSTIT_CREATION
 } from '../constants/actionTypes.js';
 
 export function roomCreation(roomData) {
@@ -16,5 +17,11 @@ export function roomTitle(text) {
   return {
     type: ROOM_TITLE,
     room_title: text
+  };
+}
+
+export function postItCreation() {
+  return {
+    type: POSTIT_CREATION
   };
 }
