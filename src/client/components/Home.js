@@ -25,9 +25,11 @@ export default class Home extends Component{
             </div>
           </div>
           <div className='createBtnWrapper'>
+            <Link to={`/room/${roomTitle}`}>
             <div className='button' onClick={createNewRoom.bind(this, roomTitle)}>
               Create!
             </div>
+            </Link>
           </div>
           <i className="far fa-lightbulb bulb"></i>
         </div>

@@ -10,7 +10,7 @@ const env = 'development';
 const db = require('./config/database')(env);
 require('./database').connect(db.url);
 
-app.get('/', function(req, res){
+app.get('/*', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 

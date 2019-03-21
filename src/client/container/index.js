@@ -40,7 +40,7 @@ const mapStateToProps = (state, props) => {
 };
 
 const mapDispatchToProps = (dispatch, props) => {
-  const history = createHashHistory();
+  // const history = createHashHistory();
 
   return {
     onMount: () => {
@@ -52,7 +52,7 @@ const mapDispatchToProps = (dispatch, props) => {
     createNewRoom: (room_title, e) => {
       axios.get(`/api/rooms/${room_title}/new`)
       .then(res => {
-        history.push(`/room/${room_title}`);
+        // history.push(`/room/${room_title}`);
         dispatch(roomCreation(res));
       });
     },
