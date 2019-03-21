@@ -3,7 +3,8 @@ import {
   ROOM_TITLE,
   POSTIT_CREATION,
   POSTIT_LOCATION,
-  POSTIT_VALUE
+  POSTIT_VALUE,
+  POSTIT_DELETION
 } from '../constants/actionTypes.js';
 
 export function roomCreation(roomData) {
@@ -46,5 +47,12 @@ export function postItValue(id, value) {
     type: POSTIT_VALUE,
     id,
     value
+  };
+}
+
+export function postItDeletion(id) {
+  return {
+    type: POSTIT_DELETION,
+    id
   };
 }

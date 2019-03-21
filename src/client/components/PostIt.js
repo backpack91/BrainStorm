@@ -55,13 +55,17 @@ export default class Postit extends Component{
     }
   }
 
+  stopBubbling(e) {
+    e.stopPropagation();
+  }
+
   render() {
-    const { setStateOfPostItValue, postItId } = this.props;
+    const { setStateOfPostItValue, postItId, deletePostIt } = this.props;
 
     return (
-      <div ref={this.postIt} className="postIt">
+      <div ref={this.postIt} className="postIt" onDoubleClick={this.stopBubbling.bind(this)}>
         <div className="postItHeader">
-          <i className="fas fa-times"></i>
+          <i className="fas fa-times" onClick={deletePostIt.bind(this, postItId)}></i>
         </div>
         <textarea onChange={setStateOfPostItValue.bind(this, postItId)}/>
       </div>

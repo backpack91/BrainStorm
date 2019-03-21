@@ -15,7 +15,8 @@ export default class SharingBoard extends Component{
     const {
       postIts,
       setStateOfPostItValue,
-      setStateOfPostItLocation
+      setStateOfPostItLocation,
+      deletePostIt
     } = this.props;
 
     return (
@@ -27,6 +28,7 @@ export default class SharingBoard extends Component{
             postItInfo={postIts[id]}
             setStateOfPostItValue={setStateOfPostItValue}
             setStateOfPostItLocation={setStateOfPostItLocation}
+            deletePostIt={deletePostIt}
           />
         );
       })
@@ -43,9 +45,10 @@ export default class SharingBoard extends Component{
           <div>STORM</div>
           <i className="far fa-lightbulb bulb"></i>
         </div>
-        {Object.keys(this.props.postIts).length
-          ? this.renderPostIts()
-          : null
+        {
+          Object.keys(this.props.postIts).length
+            ? this.renderPostIts()
+            : null
         }
         <DecorationMenu />
         <Footer />

@@ -16,7 +16,7 @@ module.exports = function(server) {
 
     socket.join('room 237', () => {
       let rooms = Object.keys(socket.rooms);
-      console.log(rooms); // [ <socket.id>, 'room 237' ]
+      console.log(rooms);
     });
 
     console.log('Connected:', socket.id);

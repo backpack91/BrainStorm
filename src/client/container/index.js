@@ -11,7 +11,8 @@ import {
   roomTitle,
   postItCreation,
   postItLocation,
-  postItValue
+  postItValue,
+  postItDeletion
 } from '../actions';
 
 class AppContainer extends Component {
@@ -69,6 +70,9 @@ const mapDispatchToProps = (dispatch, props) => {
     },
     setStateOfPostItLocation: (id, left, top) => {
       dispatch(postItLocation(id, left, top));
+    },
+    deletePostIt: (id, e) => {
+      dispatch(postItDeletion(id));
     }
   };
 };

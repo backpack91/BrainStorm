@@ -3,7 +3,8 @@ import {
   ROOM_TITLE,
   POSTIT_CREATION,
   POSTIT_VALUE,
-  POSTIT_LOCATION
+  POSTIT_LOCATION,
+  POSTIT_DELETION
 } from '../constants/actionTypes.js';
 import _ from 'lodash';
 
@@ -63,6 +64,14 @@ export default function reducer (state = initialStates, action) {
         left: action.left,
         top: action.top
       };
+
+      return {
+        ...state,
+        postIts: postItsClone
+      };
+
+    case POSTIT_DELETION:
+      delete postItsClone[action.id];
 
       return {
         ...state,

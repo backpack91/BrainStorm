@@ -16,7 +16,8 @@ class App extends Component {
       postIts,
       latestPostItId,
       setStateOfPostItValue,
-      setStateOfPostItLocation
+      setStateOfPostItLocation,
+      deletePostIt
     } = this.props.appState;
 
     return (
@@ -41,6 +42,7 @@ class App extends Component {
                 latestPostItId={latestPostItId}
                 setStateOfPostItValue={setStateOfPostItValue}
                 setStateOfPostItLocation={setStateOfPostItLocation}
+                deletePostIt={deletePostIt}
               />}
           />
         </div>
