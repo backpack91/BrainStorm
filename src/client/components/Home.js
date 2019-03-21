@@ -6,9 +6,9 @@ export default class Home extends Component{
 
   render() {
     const {
-      createNewRoom,
+      roomTitle,
       getRoomTitle,
-      roomTitle
+      createNewRoom
     } = this.props;
 
     return (
@@ -21,12 +21,12 @@ export default class Home extends Component{
           <div className='roomUrlWrapper'>
             <div className='roomUrl'>
               <span>www.brainstorm.com/</span>
-              <input placeholder='방이름을 입력해 주세요' onChange={getRoomTitle}></input>
+              <input placeholder='your room name' onChange={getRoomTitle}></input>
             </div>
           </div>
           <div className='createBtnWrapper'>
-            <div className='button' onClick={createNewRoom.bind(null, roomTitle)}>
-              Create new room!
+            <div className='button' onClick={createNewRoom.bind(this, roomTitle)}>
+              Create!
             </div>
           </div>
           <i className="far fa-lightbulb bulb"></i>

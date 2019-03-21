@@ -8,6 +8,12 @@ class DecorationMenu extends Component {
     this.state = {
       background: '#fff',
     };
+
+    this.stopBubbling = this.stopBubbling.bind(this);
+  }
+
+  stopBubbling(e) {
+    e.stopPropagation();
   }
 
   handleChangeComplete = (color) => {
@@ -16,7 +22,7 @@ class DecorationMenu extends Component {
 
   render() {
     return (
-      <div className='decorationMenuWrapper'>
+      <div className='decorationMenuWrapper' onDoubleClick={this.stopBubbling}>
         <h2>
           palette
         </h2>
