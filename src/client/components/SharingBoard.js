@@ -5,20 +5,50 @@ import Footer from './Footer.js';
 import PostIt from './PostIt.js';
 
 export default class SharingBoard extends Component{
-  render() {
+  constructor(props) {
+    super(props);
+
+    this.renderPostIts = this.renderPostIts.bind(this);
+  }
+
+  renderPostIts() {
+    const {
+      postIts,
+      setStateOfPostItValue,
+      setStateOfPostItLocation
+    } = this.props;
+
     return (
-      <div className='boardWrapper' onDoubleClick={}>
+      Object.keys(postIts).map(id => {
+        return (
+          <PostIt
+            key={id}
+            postItId={id}
+            postItInfo={postIts[id]}
+            setStateOfPostItValue={setStateOfPostItValue}
+            setStateOfPostItLocation={setStateOfPostItLocation}
+          />
+        );
+      })
+    );
+  }
+
+  render() {
+    const { makePostIt, latestPostItId } = this.props;
+
+    return (
+      <div className='boardWrapper' onDoubleClick={makePostIt.bind(null, latestPostItId)}>
         <div className="logo">
           <div className="upperText">BRAIN</div>
           <div>STORM</div>
           <i className="far fa-lightbulb bulb"></i>
         </div>
-        <PostIt />
-        <PostIt />
-        <PostIt />
-        <PostIt />
-        <Footer />
+        {Object.keys(this.props.postIts).length
+          ? this.renderPostIts()
+          : null
+        }
         <DecorationMenu />
+        <Footer />
       </div>
     );
   }

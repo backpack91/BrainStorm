@@ -1,16 +1,24 @@
 const express = require('express');
+const app = express();
+const server = require('http').createServer(app);
+// const server = require('http').Server(app);
 const route = require('./config/route.js');
 const os = require('os');
 const env = 'development';
 
-const app = express();
-
+//credentials
 const db = require('./config/database')(env);
 require('./database').connect(db.url);
 
-app.use(express.static('dist'));
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/index.html');
+});
 
+app.use(express.static('dist'));
 app.use('/api', route);
+
+//WebSocket
+require('./sockets')(server);
 
 app.use(function(req, res, next) {
   const err = new Error('Not Found');
@@ -24,4 +32,10 @@ app.use(function(err, req, res, next) {
   res.json({error: err.message});
 });
 
-app.listen(8080, () => console.log('Listening on port 8080!'));
+server.listen(8080, function () {
+  var host = server.address().address;
+  var port = server.address().port;
+  console.log('Express listening on port http://%s:%s', host, port);
+});
+
+module.exports = app;

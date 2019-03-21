@@ -4,7 +4,7 @@ import './PostIt.scss';
 export default class Postit extends Component{
   constructor(props) {
     super(props);
-    
+
     this.postIt = React.createRef();
   }
 
@@ -13,6 +13,7 @@ export default class Postit extends Component{
   }
 
   dragElement(ele) {
+    const that = this;
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     if (ele.children[0].classList[0] === `${ele.classList[0]}Header`) {
       ele.children[0].onmousedown = dragMouseDown;
@@ -42,6 +43,10 @@ export default class Postit extends Component{
       pos4 = clientY;
       ele.style.top = (ele.offsetTop - pos2) + "px";
       ele.style.left = (ele.offsetLeft - pos1) + "px";
+
+      const left = ele.offsetLeft - pos1;
+      const top = ele.offsetTop - pos2;
+      that.props.setStateOfPostItLocation(that.props.postItId, left, top);
     }
 
     function closeDragElement() {
@@ -51,12 +56,14 @@ export default class Postit extends Component{
   }
 
   render() {
+    const { setStateOfPostItValue, postItId } = this.props;
+
     return (
       <div ref={this.postIt} className="postIt">
         <div className="postItHeader">
           <i className="fas fa-times"></i>
         </div>
-        <textarea />
+        <textarea onChange={setStateOfPostItValue.bind(this, postItId)}/>
       </div>
     );
   }

@@ -2,7 +2,7 @@ import { HashRouter as Router, Route} from 'react-router-dom';
 import React, { Component } from 'react';
 import './App.scss';
 import Home from './Home.js';
-import SharingBoard from './SharingBoard';
+import SharingBoard from './SharingBoard.js';
 
 class App extends Component {
 
@@ -12,6 +12,11 @@ class App extends Component {
       getRoomTitle,
       room_title,
       routeToRoom,
+      makePostIt,
+      postIts,
+      latestPostItId,
+      setStateOfPostItValue,
+      setStateOfPostItLocation
     } = this.props.appState;
 
     return (
@@ -27,7 +32,17 @@ class App extends Component {
               />
             }
           />
-          <Route path="/room/:room_id" render={() => <SharingBoard />} />
+          <Route
+            path="/room/:room_id"
+            render={() =>
+              <SharingBoard
+                makePostIt={makePostIt}
+                postIts={postIts}
+                latestPostItId={latestPostItId}
+                setStateOfPostItValue={setStateOfPostItValue}
+                setStateOfPostItLocation={setStateOfPostItLocation}
+              />}
+          />
         </div>
       </Router>
     );
