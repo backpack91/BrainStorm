@@ -17,7 +17,14 @@ class App extends Component {
       latestPostItId,
       setStateOfPostItValue,
       setStateOfPostItLocation,
-      deletePostIt
+      deletePostIt,
+      toggleUrlbox,
+      urlBoxOpened,
+      toggleModal,
+      isModalOpened,
+      userList,
+      userName,
+      connectSocketWithRoomId
     } = this.props.appState;
 
     return (
@@ -35,14 +42,23 @@ class App extends Component {
           />
           <Route
             path="/room/:room_id"
-            render={() =>
+            render={(props) =>
               <SharingBoard
+                {...props}
                 makePostIt={makePostIt}
                 postIts={postIts}
                 latestPostItId={latestPostItId}
                 setStateOfPostItValue={setStateOfPostItValue}
                 setStateOfPostItLocation={setStateOfPostItLocation}
                 deletePostIt={deletePostIt}
+                createNewRoom={createNewRoom}
+                toggleUrlbox={toggleUrlbox}
+                urlBoxOpened={urlBoxOpened}
+                toggleModal={toggleModal}
+                isModalOpened={isModalOpened}
+                connectSocketWithRoomId={connectSocketWithRoomId}
+                userName={userName}
+                userList={userList}
               />}
           />
         </div>

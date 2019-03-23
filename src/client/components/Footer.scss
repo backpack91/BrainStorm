@@ -8,7 +8,6 @@
   bottom: 0;
   left: 2%;
   border-radius: 1rem 1rem 0 0;
-  box-shadow: rgba(219, 219, 219, 0.9) 0px 3px 8px 0px;
   padding: 0.5%;
   z-index: 20;
 
@@ -20,7 +19,7 @@
     align-items: center;
     width: 4rem;
     height: 3rem;
-    margin-right: 0.5rem;
+    margin-left: 0.5rem;
     color: white;
     border-bottom: solid 2px #BF360C;
     border-right: solid 2px #BF360C;
@@ -29,5 +28,178 @@
 
   .edge {
     border-radius: 1rem 0 0 0;
+  }
+
+  .urlBoxWrapper {
+    transition: all 0.5s ease-out;
+    position: absolute;
+    left: 9.6rem;
+    height: 3rem;
+    background-color: #FF8A65;
+    border-radius: 0 0.2rem 0.2rem 0;
+    padding: 0 0.5rem 0 0.5rem;
+    color: white;
+    border-right: solid 4px #BF360C;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .urlBox {
+      padding: 0.4rem;
+      background-color: white;
+      color: gray;
+      border: none;
+    }
+
+    .urlBox:focus {
+      outline: none;
+    }
+
+    .clipBtn {
+      position: absolute;
+      right: -0.7rem;
+      top: -0.7rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      background-color: gold;
+      border-radius: 25rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation-duration: 2s;
+      animation-name: sadAction;
+      animation-iteration-count: infinite;
+      animation-direction: alternate;
+    }
+  }
+
+  .urlBoxWrapperHidden {
+    transition: all 0.5s ease-out;
+    position: absolute;
+    width: 0px;
+    left: 9.6rem;
+    height: 3rem;
+    background-color: #FF8A65;
+    border-radius: 0 0.2rem 0.2rem 0;
+    padding: 0 0.5rem 0 0.5rem;
+    color: white;
+    border-right: solid 4px #BF360C;
+    align-items: center;
+    justify-content: center;
+    display: none;
+
+    .urlBox {
+      padding: 0.4rem;
+      background-color: white;
+      color: gray;
+      border: none;
+    }
+
+    .urlBox:focus {
+      outline: none;
+    }
+
+    .clipBtn {
+      position: absolute;
+      right: -0.7rem;
+      top: -0.7rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      background-color: gold;
+      border-radius: 25rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  .users {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 1rem;
+    border-bottom: solid 1px #BF360C;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    .userIconWrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      height: 5rem;
+      position: relative;
+      width: 5rem;
+      margin-left: 1px;
+
+      img {
+        position: absolute;
+        left: 0.8rem;
+        bottom: 1rem;
+        width: 3rem;
+        height: 3rem;
+        border: solid 3px #FF8A65;
+        border-radius: 25rem;
+        z-index: 21;
+      }
+
+      .userName {
+        height: 1.5rem;
+        color: white;
+        background-color: #FF8A65;
+        z-index: 25;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: monospace;
+      }
+    }
+
+    .myAccountIconWrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      height: 5rem;
+      position: relative;
+      width: 5rem;
+      margin-left: 1px;
+
+      img {
+        position: absolute;
+        left: 0.8rem;
+        bottom: 1rem;
+        width: 3rem;
+        height: 3rem;
+        border: solid 3px #BA68C8;
+        border-radius: 25rem;
+        z-index: 21;
+      }
+
+      .userName {
+        height: 1.5rem;
+        color: white;
+        background-color: #BA68C8;
+        z-index: 25;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: monospace;
+      }
+
+      .meTag {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 1.3rem;
+        height: 1.3rem;
+        background-color: gold;
+        color: white;
+        border-radius: 25rem;
+        position: absolute;
+        bottom: 3.5rem;
+        right: 1rem;
+        font-family: monospace;
+        z-index: 24;
+      }
+    }
   }
 }

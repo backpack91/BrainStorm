@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
-// const server = require('http').Server(app);
 const route = require('./config/route.js');
 const os = require('os');
 const env = 'development';
@@ -10,9 +9,9 @@ const env = 'development';
 const db = require('./config/database')(env);
 require('./database').connect(db.url);
 
-app.get('/*', function(req, res){
-  res.sendFile(__dirname + '/index.html');
-});
+// app.get('/', function(req, res){
+//   res.sendFile(__dirname + '/index.html');
+// });
 
 app.use(express.static('dist'));
 app.use('/api', route);

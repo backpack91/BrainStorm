@@ -4,7 +4,12 @@ import {
   POSTIT_CREATION,
   POSTIT_VALUE,
   POSTIT_LOCATION,
-  POSTIT_DELETION
+  POSTIT_DELETION,
+  TOGGLING_URLBOX,
+  TOGGLING_MODAL,
+  USERNAME_SUBMISSION,
+  USER_PARTICIPATION,
+  USER_DISCONNECTION
 } from '../constants/actionTypes.js';
 import _ from 'lodash';
 
@@ -13,7 +18,11 @@ const initialStates = {
   // user_ids: '',
   room_title: '',
   postIts: {},
-  latestPostItId: 0
+  latestPostItId: 0,
+  urlBoxOpened: false,
+  isModalOpened: false,
+  userName: '',
+  userList: []
 };
 
 export default function reducer (state = initialStates, action) {
@@ -76,6 +85,59 @@ export default function reducer (state = initialStates, action) {
       return {
         ...state,
         postIts: postItsClone
+      };
+
+    case TOGGLING_URLBOX:
+      if (state.urlBoxOpened) {
+        return {
+          ...state,
+          urlBoxOpened: false
+        };
+      } else {
+        return {
+          ...state,
+          urlBoxOpened: true
+        };
+      }
+
+    case TOGGLING_MODAL:
+      if (state.isModalOpened) {
+        return {
+          ...state,
+          isModalOpened: false
+        };
+      } else {
+        return {
+          ...state,
+          isModalOpened: true
+        };
+      }
+
+    case USERNAME_SUBMISSION:
+      return {
+        ...state,
+        userName: action.userName,
+        isModalOpened: false
+      };
+
+    case USER_PARTICIPATION:
+      return {
+        ...state,
+        userList: action.userList
+      };
+
+    case USER_DISCONNECTION:
+      let userListCopy = state.userList.slice();
+
+      state.userList.forEach((user, index) => {
+        if (user === action.disconnectedUserName) {
+          userListCopy.splice(index, 1);
+        }
+      });
+
+      return {
+        ...state,
+        userList: userListCopy
       };
 
     default:

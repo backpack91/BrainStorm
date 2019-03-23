@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './PostIt.scss';
+import Textarea from 'react-textarea-autosize';
 
 export default class Postit extends Component{
   constructor(props) {
@@ -44,6 +45,7 @@ export default class Postit extends Component{
       ele.style.top = (ele.offsetTop - pos2) + "px";
       ele.style.left = (ele.offsetLeft - pos1) + "px";
 
+
       const left = ele.offsetLeft - pos1;
       const top = ele.offsetTop - pos2;
       that.props.setStateOfPostItLocation(that.props.postItId, left, top);
@@ -55,19 +57,39 @@ export default class Postit extends Component{
     }
   }
 
+  consoled(e) {
+    const width = e.target.style.width;
+    const height = e.target.style.height;
+    console.log('width', width);
+    console.log('height', height);
+  }
+
   stopBubbling(e) {
     e.stopPropagation();
   }
 
   render() {
-    const { setStateOfPostItValue, postItId, deletePostIt } = this.props;
+    const { setStateOfPostItValue, postItId, deletePostIt, postItInfo } = this.props;
+    const location = {
+      left: `${postItInfo.left}px`,
+      top: `${postItInfo.top}px`
+    };
 
     return (
-      <div ref={this.postIt} className="postIt" onDoubleClick={this.stopBubbling.bind(this)}>
+      <div
+        ref={this.postIt}
+        className='postIt'
+        onDoubleClick={this.stopBubbling.bind(this)}
+        style={location}
+      >
         <div className="postItHeader">
           <i className="fas fa-times" onClick={deletePostIt.bind(this, postItId)}></i>
         </div>
-        <textarea onChange={setStateOfPostItValue.bind(this, postItId)}/>
+        <Textarea
+          onChange={setStateOfPostItValue.bind(this, postItId)}
+          value={postItInfo.value}
+          onMouseUp={this.consoled.bind(this)}
+        />
       </div>
     );
   }

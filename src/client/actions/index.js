@@ -4,7 +4,12 @@ import {
   POSTIT_CREATION,
   POSTIT_LOCATION,
   POSTIT_VALUE,
-  POSTIT_DELETION
+  POSTIT_DELETION,
+  TOGGLING_URLBOX,
+  TOGGLING_MODAL,
+  USERNAME_SUBMISSION,
+  USER_PARTICIPATION,
+  USER_DISCONNECTION
 } from '../constants/actionTypes.js';
 
 export function roomCreation(roomData) {
@@ -54,5 +59,38 @@ export function postItDeletion(id) {
   return {
     type: POSTIT_DELETION,
     id
+  };
+}
+
+export function togglingUrlbox() {
+  return {
+    type: TOGGLING_URLBOX
+  };
+}
+
+export function togglingModal() {
+  return {
+    type: TOGGLING_MODAL
+  };
+}
+
+export function userNameSubmission(userName) {
+  return {
+    type: USERNAME_SUBMISSION,
+    userName
+  };
+}
+
+export function userParticipation(userList) {
+  return {
+    type: USER_PARTICIPATION,
+    userList
+  };
+}
+
+export function userDisconnection(disconnectedUserName) {
+  return {
+    type: USER_DISCONNECTION,
+    disconnectedUserName
   };
 }
