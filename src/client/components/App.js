@@ -24,7 +24,7 @@ class App extends Component {
       isModalOpened,
       userList,
       userName,
-      connectSocketWithRoomId
+      joinRoom
     } = this.props.appState;
 
     return (
@@ -56,7 +56,7 @@ class App extends Component {
                 urlBoxOpened={urlBoxOpened}
                 toggleModal={toggleModal}
                 isModalOpened={isModalOpened}
-                connectSocketWithRoomId={connectSocketWithRoomId}
+                joinRoom={joinRoom}
                 userName={userName}
                 userList={userList}
               />}

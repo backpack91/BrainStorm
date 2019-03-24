@@ -59,7 +59,7 @@ export default class SharingBoard extends Component{
       urlBoxOpened,
       isModalOpened,
       toggleModal,
-      connectSocketWithRoomId,
+      joinRoom,
       userName,
       userList
     } = this.props;
@@ -91,7 +91,7 @@ export default class SharingBoard extends Component{
                 <div className='formBody'>
                   <div></div>
                   <input placeholder='your name' onChange={this.getUserName}></input>
-                  <button onClick={connectSocketWithRoomId.bind(null, this.props.match.params.room_id, this.state.user_name)}>submit</button>
+                  <button onClick={joinRoom.bind(null, this.props.match.params.room_id, this.state.user_name)}>submit</button>
                 </div>
               </div>
             </Modal>

@@ -29,13 +29,13 @@ export default function reducer (state = initialStates, action) {
   const postItsClone = _.cloneDeep(state.postIts);
 
   switch (action.type) {
-    case ROOM_CREATION:
-      return {
-        ...state,
-        room_title: action.room_title,
-        // board_infos: action.board_infos,
-        user_ids: action.user_ids
-      };
+    // case ROOM_CREATION:
+    //   return {
+    //     ...state,
+    //     room_title: action.room_title,
+    //     // board_infos: action.board_infos,
+    //     user_ids: action.user_ids
+    //   };
 
     case ROOM_TITLE:
       return {

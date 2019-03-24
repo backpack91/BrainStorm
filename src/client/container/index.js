@@ -96,8 +96,8 @@ class AppContainer extends Component {
 const mapStateToProps = (state) => {
   return {
     room_title: state.room_title,
-    board_infos: state.board_infos,
-    user_ids: state.user_ids,
+    // board_infos: state.board_infos,
+    // user_ids: state.user_ids,
     postIts: state.postIts,
     latestPostItId: state.latestPostItId,
     urlBoxOpened: state.urlBoxOpened,
@@ -135,7 +135,7 @@ const mapDispatchToProps = (dispatch) => {
         console.log('err', err);
       });
     },
-    connectSocketWithRoomId: (room_id, user_name) => {
+    joinRoom: (room_id, user_name) => {      
       socket.emit('room creation', {
         room_id,
         socket_id: socket.id,
