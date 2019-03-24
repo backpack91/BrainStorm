@@ -24,7 +24,8 @@ class App extends Component {
       isModalOpened,
       userList,
       userName,
-      joinRoom
+      joinRoom,
+      getRoomInfos
     } = this.props.appState;
 
     return (
@@ -59,6 +60,7 @@ class App extends Component {
                 joinRoom={joinRoom}
                 userName={userName}
                 userList={userList}
+                getRoomInfos={getRoomInfos}
               />}
           />
         </div>

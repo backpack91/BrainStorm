@@ -18,6 +18,7 @@ export default class SharingBoard extends Component{
 
   componentDidMount() {
     this.props.toggleModal();
+    this.props.getRoomInfos(this.props.match.params.room_id);
   }
 
   renderPostIts() {
@@ -25,7 +26,7 @@ export default class SharingBoard extends Component{
       postIts,
       setStateOfPostItValue,
       setStateOfPostItLocation,
-      deletePostIt
+      deletePostIt,
     } = this.props;
 
     return (

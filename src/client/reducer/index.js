@@ -9,13 +9,12 @@ import {
   TOGGLING_MODAL,
   USERNAME_SUBMISSION,
   USER_PARTICIPATION,
-  USER_DISCONNECTION
+  USER_DISCONNECTION,
+  BRINGING_ROOM_INFOS
 } from '../constants/actionTypes.js';
 import _ from 'lodash';
 
 const initialStates = {
-  // board_infos: '',
-  // user_ids: '',
   room_title: '',
   postIts: {},
   latestPostItId: 0,
@@ -139,6 +138,20 @@ export default function reducer (state = initialStates, action) {
         ...state,
         userList: userListCopy
       };
+
+    case BRINGING_ROOM_INFOS:
+      if (action.postIts) {
+        return {
+          ...state,
+          postIts: action.postIts,
+          room_title: action.title
+        };
+      } else {
+        return {
+          ...state,
+          room_title: action.title
+        };
+      }
 
     default:
       return state;

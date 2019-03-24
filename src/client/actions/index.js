@@ -9,7 +9,8 @@ import {
   TOGGLING_MODAL,
   USERNAME_SUBMISSION,
   USER_PARTICIPATION,
-  USER_DISCONNECTION
+  USER_DISCONNECTION,
+  BRINGING_ROOM_INFOS,
 } from '../constants/actionTypes.js';
 
 // export function roomCreation(roomData) {
@@ -92,5 +93,13 @@ export function userDisconnection(disconnectedUserName) {
   return {
     type: USER_DISCONNECTION,
     disconnectedUserName
+  };
+}
+
+export function bringingRoomInfos(roomInfos) {
+  return {
+    type: BRINGING_ROOM_INFOS,
+    postIts: roomInfos.postIts,
+    room_title: roomInfos.title
   };
 }

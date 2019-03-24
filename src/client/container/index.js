@@ -18,7 +18,8 @@ import {
   togglingModal,
   userNameSubmission,
   userParticipation,
-  userDisconnection
+  userDisconnection,
+  bringingRoomInfos
 } from '../actions';
 
 let socket = io.connect(`http://localhost:8080/`, {
@@ -96,8 +97,6 @@ class AppContainer extends Component {
 const mapStateToProps = (state) => {
   return {
     room_title: state.room_title,
-    // board_infos: state.board_infos,
-    // user_ids: state.user_ids,
     postIts: state.postIts,
     latestPostItId: state.latestPostItId,
     urlBoxOpened: state.urlBoxOpened,
@@ -126,16 +125,29 @@ const mapDispatchToProps = (dispatch) => {
       });
     },
     createNewRoom: (room_title, e) => {
-      axios.get(`/api/rooms/${room_title}/new`)
+      if (room_title) {
+        axios.get(`/api/rooms/${room_title}/new`)
+        .then(res => {
+          if (res.status === 200) {
+            history.push(`/room/${room_title}`);
+          } else if (res.status === 204) {
+            alert('이미 존재하는 방 이름 입니다. 창의력을 발휘해 주세요 ;)');
+          }
+        })
+        .catch(err => {
+          console.log('err', err);
+        });
+      }
+    },
+    getRoomInfos: (room_title) => {
+      axios.get(`/api/rooms/${room_title}/roomInfos`)
       .then(res => {
-        history.push(`/room/${room_title}`);
-        // dispatch(roomCreation(res));
+        dispatch(bringingRoomInfos(res.data));
       })
       .catch(err => {
-        console.log('err', err);
       });
     },
-    joinRoom: (room_id, user_name) => {      
+    joinRoom: (room_id, user_name) => {
       socket.emit('room creation', {
         room_id,
         socket_id: socket.id,

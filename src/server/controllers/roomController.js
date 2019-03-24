@@ -9,11 +9,7 @@ const createNewRoom = async function (req, res, next) {
     const room_title = String(req.params.room_title);
     const roomFound = await Room.findOne({title: room_title});
 
-    if (
-      roomFound === null
-        || roomFound === undefined
-        || !Object.keys(roomFound).length
-    ) {
+    if (roomFound === null) {
       const _id = new ObjectId();
       const roomCreation = await Room.create({
         _id,
@@ -38,11 +34,8 @@ const getRoomInfos = async function (req, res, next) {
   try {
     const roomFound = await Room.findOne({title: req.params.room_title});
 
-    if (
-      roomFound === null
-        || roomFound === undefined
-        || !Object.keys(roomFound).length
-    ) {
+    if (roomFound === null) {
+      console.log('no info', roomFound);
       res.sendStatus(404);
     } else {
       res.json(roomFound);
@@ -55,5 +48,5 @@ const getRoomInfos = async function (req, res, next) {
 
 module.exports = {
   createNewRoom,
-  sendInvitedRoomInfo
+  getRoomInfos
 };
