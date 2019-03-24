@@ -46,7 +46,25 @@ const getRoomInfos = async function (req, res, next) {
   }
 };
 
+const updatePostItValue = async function (req, res, next) {
+  try {
+    const { modified_postits } = req.body;
+
+    await Room.findOneAndUpdate({
+      title: req.params.room_title
+    },
+    {
+      $set: { postIts: modified_postits }
+    });
+
+    res.sendStatus('200');
+  } catch(err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createNewRoom,
-  getRoomInfos
+  getRoomInfos,
+  updatePostItValue
 };
