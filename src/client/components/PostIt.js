@@ -69,7 +69,14 @@ export default class Postit extends Component{
   }
 
   render() {
-    const { setStateOfPostItValue, postItId, deletePostIt, postItInfo } = this.props;
+    const {
+      setStateOfPostItValue,
+      postItId,
+      deletePostIt,
+      postItInfo,
+      togglePostItSelection,
+      chosenPostItList
+    } = this.props;
     const location = {
       left: `${postItInfo.left}px`,
       top: `${postItInfo.top}px`
@@ -83,6 +90,7 @@ export default class Postit extends Component{
         style={location}
       >
         <div className="postItHeader">
+          <input type='checkbox' onClick={togglePostItSelection.bind(this, postItId)}></input>
           <i className="fas fa-times" onClick={deletePostIt.bind(this, postItId)}></i>
         </div>
         <Textarea

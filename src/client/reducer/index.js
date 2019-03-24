@@ -9,7 +9,8 @@ import {
   TOGGLING_MODAL,
   USERNAME_SUBMISSION,
   USER_PARTICIPATION,
-  USER_DISCONNECTION
+  USER_DISCONNECTION,
+  POSTIT_SELECTION_TOGGLE
 } from '../constants/actionTypes.js';
 import _ from 'lodash';
 
@@ -22,7 +23,8 @@ const initialStates = {
   urlBoxOpened: false,
   isModalOpened: false,
   userName: '',
-  userList: []
+  userList: [],
+  chosenPostItList: {}
 };
 
 export default function reducer (state = initialStates, action) {
@@ -139,6 +141,25 @@ export default function reducer (state = initialStates, action) {
         ...state,
         userList: userListCopy
       };
+
+    case POSTIT_SELECTION_TOGGLE:
+      const chosenPostItListCopy = Object.assign(state.chosenPostItList);
+
+      if (chosenPostItListCopy[action.postItId]) {
+        delete chosenPostItListCopy[action.postItId];
+
+        return {
+          ...state,
+          chosenPostItList: chosenPostItListCopy
+        };
+      } else {
+        chosenPostItListCopy[action.postItId] = true;
+
+        return {
+          ...state,
+          chosenPostItList: chosenPostItListCopy
+        };
+      }
 
     default:
       return state;

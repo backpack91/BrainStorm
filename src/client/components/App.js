@@ -24,7 +24,9 @@ class App extends Component {
       isModalOpened,
       userList,
       userName,
-      connectSocketWithRoomId
+      connectSocketWithRoomId,
+      togglePostItSelection,
+      chosenPostItList
     } = this.props.appState;
 
     return (
@@ -59,6 +61,8 @@ class App extends Component {
                 connectSocketWithRoomId={connectSocketWithRoomId}
                 userName={userName}
                 userList={userList}
+                chosenPostItList={chosenPostItList}
+                togglePostItSelection={togglePostItSelection}
               />}
           />
         </div>

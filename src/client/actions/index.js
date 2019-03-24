@@ -9,7 +9,8 @@ import {
   TOGGLING_MODAL,
   USERNAME_SUBMISSION,
   USER_PARTICIPATION,
-  USER_DISCONNECTION
+  USER_DISCONNECTION,
+  POSTIT_SELECTION_TOGGLE
 } from '../constants/actionTypes.js';
 
 export function roomCreation(roomData) {
@@ -92,5 +93,12 @@ export function userDisconnection(disconnectedUserName) {
   return {
     type: USER_DISCONNECTION,
     disconnectedUserName
+  };
+}
+
+export function postItSelectionToggle(postItId) {
+  return {
+    type: POSTIT_SELECTION_TOGGLE,
+    postItId
   };
 }

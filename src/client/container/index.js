@@ -18,7 +18,9 @@ import {
   togglingModal,
   userNameSubmission,
   userParticipation,
-  userDisconnection
+  userDisconnection,
+  postItChoosing,
+  postItSelectionToggle
 } from '../actions';
 
 let socket = io.connect(`http://localhost:8080/`, {
@@ -103,7 +105,8 @@ const mapStateToProps = (state) => {
     urlBoxOpened: state.urlBoxOpened,
     isModalOpened: state.isModalOpened,
     userName: state.userName,
-    userList: state.userList
+    userList: state.userList,
+    chosenPostItList: state.chosenPostItList
   };
 };
 
@@ -184,6 +187,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     toggleModal: () => {
       dispatch(togglingModal());
+    },
+    togglePostItSelection: (postItId) => {
+      dispatch(postItSelectionToggle(postItId));
     }
   };
 };

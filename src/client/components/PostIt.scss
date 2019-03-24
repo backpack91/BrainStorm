@@ -14,14 +14,18 @@
 
   .postItHeader {
     width: 100%;
-    height: 1.2rem;
+    height: 1.3rem;
     cursor: move;
     z-index: 10;
     background-color: #ff8a65;
     color: #fff;
     display: flex;
     justify-content: flex-end;
-    align-items: flex-end;
+    align-items: center;
+
+    input {
+      margin: 0;
+    }
 
     i {
       width: 1.3rem;
