@@ -10,25 +10,23 @@ const createNewRoom = async function (req, res, next) {
     const roomFound = await Room.findOne({title: room_title});
 
     if (
-      roomFound !== null
-        && roomFound !== undefined
-        && Object.keys(roomFound).length
+      roomFound === null
+        || roomFound === undefined
+        || !Object.keys(roomFound).length
     ) {
-      res.sendStatus(204);
-    } else {
       const _id = new ObjectId();
       const roomCreation = await Room.create({
         _id,
         title: room_title,
-        board_infos: [],
-        user_ids: []
       });
 
       res.json({
+        _id,
         title: room_title,
-        board_infos: [],
-        user_ids: []
+        postIts: {}
       });
+    } else {
+      res.sendStatus(204);
     }
   } catch(err) {
     console.log('err: ', err);
@@ -36,19 +34,24 @@ const createNewRoom = async function (req, res, next) {
   }
 };
 
-const sendInvitedRoomInfo = async function (req, res, next) {
+const getRoomInfos = async function (req, res, next) {
   try {
     const roomFound = await Room.findOne({title: req.params.room_title});
 
-    res.json({
-      title: roomFound.title,
-      board_infos: roomFound.board_infos,
-      user_ids: roomFound.user_ids
-    });
+    if (
+      roomFound === null
+        || roomFound === undefined
+        || !Object.keys(roomFound).length
+    ) {
+      res.sendStatus(404);
+    } else {
+      res.json(roomFound);
+    }
+
   } catch(err) {
     next(err);
   }
-}
+};
 
 module.exports = {
   createNewRoom,
