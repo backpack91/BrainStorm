@@ -26,7 +26,9 @@ export default class SharingBoard extends Component{
       postIts,
       setStateOfPostItValue,
       setStateOfPostItLocation,
-      deletePostIt
+      deletePostIt,
+      togglePostItSelection,
+      chosenPostItList
     } = this.props;
 
     return (
@@ -40,6 +42,8 @@ export default class SharingBoard extends Component{
             setStateOfPostItLocation={setStateOfPostItLocation}
             deletePostIt={deletePostIt}
             roomTitle={this.props.match.params.room_id}
+            chosenPostItList={chosenPostItList}
+            togglePostItSelection={togglePostItSelection}
           />
         )
       })
@@ -64,7 +68,9 @@ export default class SharingBoard extends Component{
       joinRoom,
       userName,
       userList,
-      postIts
+      postIts,
+      togglePostItSelection,
+      chosenPostItList
     } = this.props;
 
     return (
