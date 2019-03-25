@@ -6,6 +6,7 @@ import axios from 'axios';
 import { createBrowserHistory } from 'history';
 import io from 'socket.io-client';
 import ReduxThunk from 'redux-thunk';
+import _ from 'lodash';
 import {
   roomCreation,
   roomTitle,
@@ -34,8 +35,8 @@ let dispatchDeletePostIt;
 let dispatchUserParticipation;
 let dispatchUserDisconnection;
 
-const dispatchMakeNewPostItPartial = (dispatch) => (id) => {
-  dispatch(postItCreation(id));
+const dispatchMakeNewPostItPartial = (dispatch) => (id, room_id) => {
+  dispatch(postItCreation(id, room_id));
 };
 
 const dispatchUpdatePostItValuePartial = (dispatch) => (id, value) => {
@@ -140,6 +141,8 @@ const mapDispatchToProps = (dispatch) => {
       }
     },
     getRoomInfos: (room_title) => {
+      room_id = room_title;
+
       axios.get(`/api/rooms/${room_title}/roomInfos`)
       .then(res => {
         dispatch(bringingRoomInfos(res.data));
@@ -159,36 +162,94 @@ const mapDispatchToProps = (dispatch) => {
       const title = e.target.value;
       dispatch(roomTitle(title));
     },
-    makePostIt: (id, e) => {
+    makePostIt: (latestPostItId, room_id, e) => {
       socket.emit('postit creation', {
+        room_id,
         socket_id: socket.id,
-        postit_id: id
+        postit_id: latestPostItId
       });
-      dispatch(postItCreation(id));
-    },
-    setStateOfPostItValue: (id, e) => {
-      const value = e.target.value;
 
+      axios.post(`/api/rooms/${room_id}/newPostIt`, {
+        postit_id: latestPostItId
+      })
+      .then(res => {
+        console.log('save changed infos >>', res);
+      })
+      .catch(err => {
+        console.log('err', err);
+      });
+
+      dispatch(postItCreation(latestPostItId));
+    },
+    setStateOfPostItValue: (postit_id, room_title, postit_info, e) => {
+      const value = e.target.value;
+      postit_info.value = value;
+
+      function requestUpdateValue() {
+        axios.post(`/api/rooms/${room_title}/modifiedRoomInfos`, {
+          postit_id,
+          modified_postit: postit_info
+        })
+        .then(res => {
+          console.log(res);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      }
+
+      _.debounce(requestUpdateValue, 100)();
       socket.emit('update postit value', {
+        room_id,
         socket_id: socket.id,
-        postit_id: id,
+        postit_id,
         value
       });
-      dispatch(postItValue(id, value));
+      dispatch(postItValue(postit_id, value));
     },
-    setStateOfPostItLocation: (id, left, top) => {
+    setStateOfPostItLocation: (postit_id, left, top, postit_info, room_title) => {
+      postit_info.left = left;
+      postit_info.top = top;
+
+      function requestUpdateLocation() {
+        axios.post(`/api/rooms/${room_title}/modifiedRoomInfos`, {
+          postit_id,
+          modified_postit: postit_info
+        })
+        .then(res => {
+          console.log(res);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      }
+
+      _.debounce(requestUpdateLocation, 100)();
       socket.emit('update postit location', {
+        room_id,
         socket_id: socket.id,
-        postit_id: id,
+        postit_id,
         left,
         top
       });
     },
-    deletePostIt: (id, e) => {
-      dispatch(postItDeletion(id));
+    deletePostIt: (postit_id, e) => {
+      axios.post(`/api/rooms/${room_id}/postItDeletion`, {
+        postit_id,
+      })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+
+
+      dispatch(postItDeletion(postit_id));
       socket.emit('postit deletion', {
+        room_id,
         socket_id: socket.id,
-        postit_id: id
+        postit_id
       });
     },
     toggleUrlbox: () => {

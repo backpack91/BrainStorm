@@ -46,15 +46,16 @@ const getRoomInfos = async function (req, res, next) {
   }
 };
 
-const updatePostItValue = async function (req, res, next) {
+const updatePostItContent = async function (req, res, next) {
   try {
-    const { modified_postits } = req.body;
+    const { modified_postit, postit_id } = req.body;
 
     await Room.findOneAndUpdate({
-      title: req.params.room_title
+      title: req.params.room_title,
+      "postIts.postit_id":  postit_id
     },
     {
-      $set: { postIts: modified_postits }
+      $set: { "postIts.$": modified_postit }
     });
 
     res.sendStatus('200');
@@ -63,8 +64,46 @@ const updatePostItValue = async function (req, res, next) {
   }
 };
 
+const makeNewPostIt = async function (req, res, next) {
+  try {
+    const { postit_id } = req.body;
+
+    await Room.findOneAndUpdate({
+      title: req.params.room_title,
+    },{
+      $addToSet: { postIts: {
+        postit_id,
+        left: "",
+        top: "",
+        value: ""
+        }
+      }
+    });
+    res.sendStatus(200);
+  } catch(err) {
+    next(err);
+  }
+};
+
+const deletePostIt = async function (req, res, next) {
+  try {
+    const { postit_id } = req.body;
+
+    await Room.findOneAndUpdate({
+      title: req.params.room_title,
+    },{
+      $pull: { postIts: {postit_id: postit_id }}
+    });
+    res.sendStatus(200);
+  } catch(err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createNewRoom,
   getRoomInfos,
-  updatePostItValue
+  updatePostItContent,
+  makeNewPostIt,
+  deletePostIt
 };

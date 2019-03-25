@@ -5,17 +5,17 @@ const Schema = mongoose.Schema;
 const RoomsSchema = new Schema({
   _id: Schema.Types.ObjectId,
   title: String,
-  postIts: {
-    id: {
+  postIts: [
+    {
+      postit_id: Number,
       font_size: String,
       width: String,
       height: String,
       left: String,
       top: String,
-      text: String,
-      user_last_wrote: String
+      value: String
     }
-  }
+  ]
 });
 
 module.exports = mongoose.model('Rooms', RoomsSchema);

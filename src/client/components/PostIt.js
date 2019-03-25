@@ -48,7 +48,7 @@ export default class Postit extends Component{
 
       const left = ele.offsetLeft - pos1;
       const top = ele.offsetTop - pos2;
-      that.props.setStateOfPostItLocation(that.props.postItId, left, top);
+      that.props.setStateOfPostItLocation(that.props.postItId, left, top, that.props.postItInfo, that.props.roomTitle);
     }
 
     function closeDragElement() {
@@ -69,7 +69,13 @@ export default class Postit extends Component{
   }
 
   render() {
-    const { setStateOfPostItValue, postItId, deletePostIt, postItInfo } = this.props;
+    const {
+      setStateOfPostItValue,
+      postItId,
+      deletePostIt,
+      postItInfo,
+      roomTitle,
+    } = this.props;
     const location = {
       left: `${postItInfo.left}px`,
       top: `${postItInfo.top}px`
@@ -86,7 +92,7 @@ export default class Postit extends Component{
           <i className="fas fa-times" onClick={deletePostIt.bind(this, postItId)}></i>
         </div>
         <Textarea
-          onChange={setStateOfPostItValue.bind(this, postItId)}
+          onChange={setStateOfPostItValue.bind(this, postItId, roomTitle, postItInfo)}
           value={postItInfo.value}
           onMouseUp={this.consoled.bind(this)}
         />

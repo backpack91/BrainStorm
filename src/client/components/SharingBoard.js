@@ -26,7 +26,7 @@ export default class SharingBoard extends Component{
       postIts,
       setStateOfPostItValue,
       setStateOfPostItLocation,
-      deletePostIt,
+      deletePostIt
     } = this.props;
 
     return (
@@ -39,6 +39,7 @@ export default class SharingBoard extends Component{
             setStateOfPostItValue={setStateOfPostItValue}
             setStateOfPostItLocation={setStateOfPostItLocation}
             deletePostIt={deletePostIt}
+            roomTitle={this.props.match.params.room_id}
           />
         )
       })
@@ -62,11 +63,12 @@ export default class SharingBoard extends Component{
       toggleModal,
       joinRoom,
       userName,
-      userList
+      userList,
+      postIts
     } = this.props;
 
     return (
-      <div className='boardWrapper' onDoubleClick={makePostIt.bind(null, latestPostItId)}>
+      <div className='boardWrapper' onDoubleClick={makePostIt.bind(null, latestPostItId, this.props.match.params.room_id)}>
         <div className="logo">
           <div className="upperText">BRAIN</div>
           <div>STORM</div>

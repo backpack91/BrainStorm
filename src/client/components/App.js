@@ -61,6 +61,7 @@ class App extends Component {
                 userName={userName}
                 userList={userList}
                 getRoomInfos={getRoomInfos}
+                roomTitle={room_title}
               />}
           />
         </div>

@@ -16,7 +16,7 @@ import _ from 'lodash';
 
 const initialStates = {
   room_title: '',
-  postIts: {},
+  postIts: [],
   latestPostItId: 0,
   urlBoxOpened: false,
   isModalOpened: false,
@@ -25,7 +25,7 @@ const initialStates = {
 };
 
 export default function reducer (state = initialStates, action) {
-  const postItsClone = _.cloneDeep(state.postIts);
+  const postItsClone = state.postIts.slice();
 
   switch (action.type) {
     // case ROOM_CREATION:
@@ -43,7 +43,9 @@ export default function reducer (state = initialStates, action) {
       };
 
     case POSTIT_CREATION:
+      console.log('action.id', action.id);
       postItsClone[action.id] = {
+        postit_id: action.id,
         left: action.left,
         top: action.top,
         value: action.value
@@ -140,11 +142,20 @@ export default function reducer (state = initialStates, action) {
       };
 
     case BRINGING_ROOM_INFOS:
-      if (action.postIts) {
+      const prevLatestPostItId = action.postIts.reduce((acc, item) => {
+        if(item.postit_id >= acc) {
+          return item.postit_id;
+        } else {
+          return acc;
+        }
+      }, 0);
+
+      if (action.postIts.length) {
         return {
           ...state,
           postIts: action.postIts,
-          room_title: action.title
+          room_title: action.title,
+          latestPostItId: prevLatestPostItId + 1
         };
       } else {
         return {
