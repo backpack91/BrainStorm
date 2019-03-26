@@ -27,8 +27,10 @@ class App extends Component {
       joinRoom,
       getRoomInfos,
       connectSocketWithRoomId,
-      togglePostItSelection,
-      chosenPostItList
+      selectPostIt,
+      postItStyles,
+      editPostItStyle,
+      selectedPostItId
     } = this.props.appState;
 
     return (
@@ -65,8 +67,10 @@ class App extends Component {
                 userList={userList}
                 getRoomInfos={getRoomInfos}
                 roomTitle={room_title}
-                chosenPostItList={chosenPostItList}
-                togglePostItSelection={togglePostItSelection}
+                selectPostIt={selectPostIt}
+                postItStyles={postItStyles}
+                editPostItStyle={editPostItStyle}
+                selectedPostItId={selectedPostItId}
               />}
           />
         </div>

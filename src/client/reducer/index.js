@@ -11,7 +11,8 @@ import {
   USER_PARTICIPATION,
   USER_DISCONNECTION,
   BRINGING_ROOM_INFOS,
-  POSTIT_SELECTION_TOGGLE
+  POSTIT_SELECTION,
+  POSTIT_STYLE
 } from '../constants/actionTypes.js';
 import _ from 'lodash';
 
@@ -23,7 +24,9 @@ const initialStates = {
   isModalOpened: false,
   userName: '',
   userList: [],
-  chosenPostItList: {}
+  chosenPostIt: '',
+  postItStyles: [],
+  selectedPostIt: ''
 };
 
 export default function reducer (state = initialStates, action) {
@@ -166,25 +169,69 @@ export default function reducer (state = initialStates, action) {
         };
       }
 
-    case POSTIT_SELECTION_TOGGLE:
-      const chosenPostItListCopy = Object.assign(state.chosenPostItList);
+    case POSTIT_SELECTION:
+      return {
+        ...state,
+        selectedPostItId: action.postItId
+      };
 
-      if (chosenPostItListCopy[action.postItId]) {
-        delete chosenPostItListCopy[action.postItId];
+    case POSTIT_STYLE:
+      const { postItId, prevStyles, styleOption, detail } = action;
+      let modifiedStyle;
+      let prevStylesCopy;
 
-        return {
-          ...state,
-          chosenPostItList: chosenPostItListCopy
-        };
-      } else {
-        chosenPostItListCopy[action.postItId] = true;
-
-        return {
-          ...state,
-          chosenPostItList: chosenPostItListCopy
-        };
+      console.log('prevStyles>>>>>>>,', prevStyles);
+      if (!prevStyles[postItId]) {
+        prevStyles[postItId] = {};
       }
-        
+
+      switch(styleOption) {
+        case 'fontSize':
+          modifiedStyle = Object.assign(prevStyles[postItId], {fontSize: detail});
+          prevStyles[postItId] = modifiedStyle;
+          prevStylesCopy = prevStyles.slice();
+
+          return {
+            ...state,
+            postItStyles: prevStylesCopy
+          };
+        case 'color':
+          modifiedStyle = Object.assign(prevStyles[postItId], {color: detail});
+          prevStyles[postItId] = modifiedStyle;
+          prevStylesCopy = prevStyles.slice();
+
+          return {
+            ...state,
+            postItStyles: prevStylesCopy
+          };
+
+        case 'backgroundColor':
+          if (
+            detail === '#697689'
+            || detail === '#555555'
+          ) {
+            modifiedStyle = Object.assign(prevStyles[postItId], {
+              backgroundColor: detail,
+              color: 'white'
+            });
+            prevStyles[postItId] = modifiedStyle;
+            prevStylesCopy = prevStyles.slice();
+          } else {
+            modifiedStyle = Object.assign(prevStyles[postItId], {
+              backgroundColor: detail,
+              color: 'black'
+            });
+            prevStyles[postItId] = modifiedStyle;
+            prevStylesCopy = prevStyles.slice();
+          }
+
+          return {
+            ...state,
+            postItStyles: prevStylesCopy
+          };
+
+      }
+
     default:
       return state;
   }

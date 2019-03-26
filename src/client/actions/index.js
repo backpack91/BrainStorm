@@ -11,7 +11,8 @@ import {
   USER_PARTICIPATION,
   USER_DISCONNECTION,
   BRINGING_ROOM_INFOS,
-  POSTIT_SELECTION_TOGGLE
+  POSTIT_SELECTION,
+  POSTIT_STYLE
 } from '../constants/actionTypes.js';
 
 // export function roomCreation(roomData) {
@@ -105,9 +106,19 @@ export function bringingRoomInfos(roomInfos) {
   };
 }
 
-export function postItSelectionToggle(postItId) {
+export function postItSelection(postItId) {
   return {
-    type: POSTIT_SELECTION_TOGGLE,
+    type: POSTIT_SELECTION,
     postItId
+  };
+}
+
+export function postItStyle(postItId, prevStyles, styleOption, detail) {
+  return {
+    type: POSTIT_STYLE,
+    postItId,
+    styleOption,
+    prevStyles,
+    detail
   };
 }

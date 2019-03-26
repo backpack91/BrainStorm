@@ -58,10 +58,20 @@ export default class Postit extends Component{
   }
 
   consoled(e) {
+    const style = e.target.style;
     const width = e.target.style.width;
     const height = e.target.style.height;
-    console.log('width', width);
-    console.log('height', height);
+    const font_size = e.target.style.fontSize;
+    const backgroundColor = e.target.style.backgroundColor;
+    console.log('style',style, {
+      width,
+      height,
+      font_size,
+      backgroundColor
+    });
+
+    console.log('this.props.postItId: ', this.props.postItId);
+
   }
 
   stopBubbling(e) {
@@ -75,13 +85,16 @@ export default class Postit extends Component{
       deletePostIt,
       postItInfo,
       roomTitle,
-      togglePostItSelection,
-      chosenPostItList
+      selectPostIt,
+      postItStyles
     } = this.props;
     const location = {
       left: `${postItInfo.left}px`,
       top: `${postItInfo.top}px`
     };
+
+    console.log('postItStyles', postItStyles);
+    console.log('조건조건', postItStyles.length && postItStyles[postItId]);
 
     return (
       <div
@@ -91,13 +104,13 @@ export default class Postit extends Component{
         style={location}
       >
         <div className="postItHeader">
-          <input type='checkbox' onClick={togglePostItSelection.bind(this, postItId)}></input>
           <i className="fas fa-times" onClick={deletePostIt.bind(this, postItId)}></i>
         </div>
         <Textarea
+          style={postItStyles.length && postItStyles[postItId] ? postItStyles[postItId] : {}}
           onChange={setStateOfPostItValue.bind(this, postItId, roomTitle, postItInfo)}
           value={postItInfo.value}
-          onMouseUp={this.consoled.bind(this)}
+          onMouseUp={selectPostIt.bind(this, postItId)}
         />
       </div>
     );

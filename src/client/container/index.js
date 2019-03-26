@@ -21,8 +21,8 @@ import {
   userParticipation,
   userDisconnection,
   bringingRoomInfos,
-  postItChoosing,
-  postItSelectionToggle
+  postItSelection,
+  postItStyle
 } from '../actions';
 
 let socket = io.connect(`http://localhost:8080/`, {
@@ -36,6 +36,7 @@ let dispatchUpdatePostItLocation;
 let dispatchDeletePostIt;
 let dispatchUserParticipation;
 let dispatchUserDisconnection;
+let dispatchEditPostItStyle;
 
 const dispatchMakeNewPostItPartial = (dispatch) => (id, room_id) => {
   dispatch(postItCreation(id, room_id));
@@ -61,6 +62,10 @@ const dispatchUserDisconnectionPartial = (dispatch) => (disconnectedUserName) =>
   dispatch(userDisconnection(disconnectedUserName));
 };
 
+const dispatchEditPostItStylePartial = (dispatch) => (postItId, prevStyles, styleOption, detail) => {
+  dispatch(postItStyle(postItId, prevStyles, styleOption, detail));
+}
+
 socket.on('postit creation', function(data) {
   dispatchMakeNewPostIt(data.postit_id);
 });
@@ -85,6 +90,10 @@ socket.on('delete disconnected user', function(disconnectedUserName) {
   dispatchUserDisconnection(disconnectedUserName);
 });
 
+socket.on('postit style edit', function(data) {
+  dispatchEditPostItStyle(data.postItId, data.prevStyles, data.styleOption, data.detail);
+});
+
 class AppContainer extends Component {
   componentDidMount() {
     this.props.onMount();
@@ -106,7 +115,8 @@ const mapStateToProps = (state) => {
     isModalOpened: state.isModalOpened,
     userName: state.userName,
     userList: state.userList,
-    chosenPostItList: state.chosenPostItList
+    postItStyles: state.postItStyles,
+    selectedPostItId: state.selectedPostItId
   };
 };
 
@@ -120,6 +130,7 @@ const mapDispatchToProps = (dispatch) => {
   dispatchDeletePostIt = dispatchDeletePostItPartial(dispatch);
   dispatchUserParticipation = dispatchUserParticipationPartial(dispatch);
   dispatchUserDisconnection = dispatchUserDisconnectionPartial(dispatch);
+  dispatchEditPostItStyle = dispatchEditPostItStylePartial(dispatch);
 
   return {
     onMount: () => {
@@ -247,7 +258,6 @@ const mapDispatchToProps = (dispatch) => {
         console.log(err);
       });
 
-
       dispatch(postItDeletion(postit_id));
       socket.emit('postit deletion', {
         room_id,
@@ -261,8 +271,18 @@ const mapDispatchToProps = (dispatch) => {
     toggleModal: () => {
       dispatch(togglingModal());
     },
-    togglePostItSelection: (postItId) => {
-      dispatch(postItSelectionToggle(postItId));
+    selectPostIt: (postItId) => {
+      dispatch(postItSelection(postItId));
+    },
+    editPostItStyle: (postItId, prevStyles, styleOption, detail, e) => {
+      socket.emit('postit style edit', {
+        room_id,
+        postItId,
+        prevStyles,
+        styleOption,
+        detail
+      });
+      dispatch(postItStyle(postItId, prevStyles, styleOption, detail));
     }
   };
 };

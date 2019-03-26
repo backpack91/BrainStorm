@@ -17,10 +17,23 @@ class DecorationMenu extends Component {
   }
 
   handleChangeComplete = (color) => {
+    const {
+      editPostItStyle,
+      selectedPostItId,
+      postItStyles
+    } = this.props;
+
     this.setState({ background: color.hex });
+    editPostItStyle(selectedPostItId, postItStyles, 'backgroundColor', color.hex);
   };
 
   render() {
+    const {
+      editPostItStyle,
+      selectedPostItId,
+      postItStyles
+    } = this.props;
+
     return (
       <div className='decorationMenuWrapper' onDoubleClick={this.stopBubbling}>
         <h2>
@@ -29,9 +42,18 @@ class DecorationMenu extends Component {
         <div className='fontSizeController palleteSection'>
           <h3>Font size</h3>
           <div className="sizeBtnWrapper">
-            <div className="sizeBtn size_1">a</div>
-            <div className="sizeBtn size_2">a</div>
-            <div className="sizeBtn size_3">a</div>
+            <div
+              className="sizeBtn size_1"
+              onClick={editPostItStyle.bind(this, selectedPostItId, postItStyles, 'fontSize', '1rem')}
+            >a</div>
+            <div
+              className="sizeBtn size_2"
+              onClick={editPostItStyle.bind(this, selectedPostItId, postItStyles, 'fontSize', '1.8rem')}
+            >a</div>
+            <div
+              className="sizeBtn size_3"
+              onClick={editPostItStyle.bind(this, selectedPostItId, postItStyles, 'fontSize', '2.5rem')}
+            >a</div>
           </div>
         </div>
         <div className='colorController palleteSection'>

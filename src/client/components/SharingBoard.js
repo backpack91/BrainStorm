@@ -27,23 +27,23 @@ export default class SharingBoard extends Component{
       setStateOfPostItValue,
       setStateOfPostItLocation,
       deletePostIt,
-      togglePostItSelection,
-      chosenPostItList
+      selectPostIt,
+      postItStyles
     } = this.props;
 
     return (
-      Object.keys(postIts).map(id => {
+      postIts.map((postItInfo, index) => {
         return (
           <PostIt
-            key={id}
-            postItId={id}
-            postItInfo={postIts[id]}
+            key={index}
+            postItId={index}
+            postItInfo={postItInfo}
             setStateOfPostItValue={setStateOfPostItValue}
             setStateOfPostItLocation={setStateOfPostItLocation}
             deletePostIt={deletePostIt}
             roomTitle={this.props.match.params.room_id}
-            chosenPostItList={chosenPostItList}
-            togglePostItSelection={togglePostItSelection}
+            selectPostIt={selectPostIt}
+            postItStyles={postItStyles}
           />
         )
       })
@@ -69,10 +69,11 @@ export default class SharingBoard extends Component{
       userName,
       userList,
       postIts,
-      togglePostItSelection,
-      chosenPostItList
+      editPostItStyle,
+      selectedPostItId,
+      postItStyles
     } = this.props;
-
+    console.log('postIts in SharingBoard!!!!!!!!!!!', postIts);
     return (
       <div className='boardWrapper' onDoubleClick={makePostIt.bind(null, latestPostItId, this.props.match.params.room_id)}>
         <div className="logo">
@@ -81,11 +82,15 @@ export default class SharingBoard extends Component{
           <i className="far fa-lightbulb bulb"></i>
         </div>
         {
-          Object.keys(this.props.postIts).length
+          postIts.length
             ? this.renderPostIts()
             : null
         }
-        <DecorationMenu />
+        <DecorationMenu
+          editPostItStyle={editPostItStyle}
+          selectedPostItId={selectedPostItId}
+          postItStyles={postItStyles}
+        />
         <Footer
           toggleUrlbox={toggleUrlbox}
           urlBoxOpened={urlBoxOpened}

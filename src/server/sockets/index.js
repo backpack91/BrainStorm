@@ -59,5 +59,9 @@ module.exports = function(server, roomTitle) {
     socket.on('update postit location', (data) => {
       socket.to(data.room_id).emit('update postit location', data);
     });
+
+    socket.on('postit style edit', (data) => {
+      socket.to(data.room_id).emit('postit style edit', data);
+    });
   });
 };
