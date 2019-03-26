@@ -33,14 +33,6 @@ export default function reducer (state = initialStates, action) {
   const postItsClone = state.postIts.slice();
 
   switch (action.type) {
-    // case ROOM_CREATION:
-    //   return {
-    //     ...state,
-    //     room_title: action.room_title,
-    //     // board_infos: action.board_infos,
-    //     user_ids: action.user_ids
-    //   };
-
     case ROOM_TITLE:
       return {
         ...state,
@@ -179,15 +171,18 @@ export default function reducer (state = initialStates, action) {
       const { postItId, prevStyles, styleOption, detail } = action;
       let modifiedStyle;
       let prevStylesCopy;
+      let styleObjInArrCopy;
 
-      console.log('prevStyles>>>>>>>,', prevStyles);
       if (!prevStyles[postItId]) {
         prevStyles[postItId] = {};
       }
+      styleObjInArrCopy = _.cloneDeep(prevStyles[postItId]);
 
       switch(styleOption) {
         case 'fontSize':
-          modifiedStyle = Object.assign(prevStyles[postItId], {fontSize: detail});
+          modifiedStyle = Object.assign(styleObjInArrCopy, {
+            fontSize: detail
+          });
           prevStyles[postItId] = modifiedStyle;
           prevStylesCopy = prevStyles.slice();
 
@@ -196,7 +191,9 @@ export default function reducer (state = initialStates, action) {
             postItStyles: prevStylesCopy
           };
         case 'color':
-          modifiedStyle = Object.assign(prevStyles[postItId], {color: detail});
+          modifiedStyle = Object.assign(styleObjInArrCopy, {
+            color: detail
+          });
           prevStyles[postItId] = modifiedStyle;
           prevStylesCopy = prevStyles.slice();
 
@@ -210,26 +207,36 @@ export default function reducer (state = initialStates, action) {
             detail === '#697689'
             || detail === '#555555'
           ) {
-            modifiedStyle = Object.assign(prevStyles[postItId], {
+            modifiedStyle = Object.assign(styleObjInArrCopy, {
               backgroundColor: detail,
               color: 'white'
             });
-            prevStyles[postItId] = modifiedStyle;
-            prevStylesCopy = prevStyles.slice();
           } else {
-            modifiedStyle = Object.assign(prevStyles[postItId], {
+            modifiedStyle = Object.assign(styleObjInArrCopy, {
               backgroundColor: detail,
               color: 'black'
             });
-            prevStyles[postItId] = modifiedStyle;
-            prevStylesCopy = prevStyles.slice();
           }
+          prevStyles[postItId] = modifiedStyle;
+          prevStylesCopy = prevStyles.slice();
 
           return {
             ...state,
             postItStyles: prevStylesCopy
           };
 
+        case 'boxSize':
+          modifiedStyle = Object.assign(styleObjInArrCopy, {
+            width: detail.width,
+            height: detail.height
+          });
+          prevStyles[postItId] = modifiedStyle;
+          prevStylesCopy = prevStyles.slice();
+
+          return {
+            ...state,
+            postItStyles: prevStylesCopy
+          };
       }
 
     default:

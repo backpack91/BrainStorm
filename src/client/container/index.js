@@ -91,6 +91,7 @@ socket.on('delete disconnected user', function(disconnectedUserName) {
 });
 
 socket.on('postit style edit', function(data) {
+  console.log('socket height!1#@#@@#@!##!@', data.detail);
   dispatchEditPostItStyle(data.postItId, data.prevStyles, data.styleOption, data.detail);
 });
 
@@ -136,7 +137,7 @@ const mapDispatchToProps = (dispatch) => {
     onMount: () => {
       axios.get('/')
       .then(res => {
-        console.log('onMount!!!!!!!!', res);
+        console.log('onMount..', res);
       });
     },
     createNewRoom: (room_title, e) => {

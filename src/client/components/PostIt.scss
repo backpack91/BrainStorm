@@ -1,15 +1,9 @@
 .postIt {
   top: 35%;
   left: 35%;
-  // display: block;
-  // min-width: 7rem;
-  // min-height: 4rem;
   position: absolute;
   z-index: 9;
-  // background-color: gold;
-  // border: 1px solid orange;
   text-align: center;
-  // border-radius: 0.3rem;
   // box-shadow: rgba(219, 219, 219, 0.5) 0px 3px 8px 1px;
   box-shadow: rgba(0, 0, 0, 0.6) 0px 3px 8px 0px;
 
@@ -19,7 +13,6 @@
     cursor: move;
     z-index: 10;
     background-color: #ff8a65;
-    // background-color: orange;
     color: #fff;
     display: flex;
     justify-content: flex-end;
@@ -45,7 +38,6 @@
     display: block;
     padding: 1rem;
     width: 7rem;
-    height: 100%;
     background-color: white;
     border: none;
     font-size: 1.5rem;

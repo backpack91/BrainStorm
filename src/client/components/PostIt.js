@@ -58,20 +58,15 @@ export default class Postit extends Component{
   }
 
   consoled(e) {
-    const style = e.target.style;
+    const {
+      editPostItStyle,
+      postItId,
+      postItStyles
+    } = this.props;
     const width = e.target.style.width;
     const height = e.target.style.height;
-    const font_size = e.target.style.fontSize;
-    const backgroundColor = e.target.style.backgroundColor;
-    console.log('style',style, {
-      width,
-      height,
-      font_size,
-      backgroundColor
-    });
 
-    console.log('this.props.postItId: ', this.props.postItId);
-
+    editPostItStyle(postItId, postItStyles, 'boxSize', {width, height});
   }
 
   stopBubbling(e) {
@@ -86,15 +81,14 @@ export default class Postit extends Component{
       postItInfo,
       roomTitle,
       selectPostIt,
-      postItStyles
+      postItStyles,
+      editPostItStyle
     } = this.props;
+    
     const location = {
       left: `${postItInfo.left}px`,
       top: `${postItInfo.top}px`
     };
-
-    console.log('postItStyles', postItStyles);
-    console.log('조건조건', postItStyles.length && postItStyles[postItId]);
 
     return (
       <div
@@ -106,11 +100,12 @@ export default class Postit extends Component{
         <div className="postItHeader">
           <i className="fas fa-times" onClick={deletePostIt.bind(this, postItId)}></i>
         </div>
-        <Textarea
+        <textarea
           style={postItStyles.length && postItStyles[postItId] ? postItStyles[postItId] : {}}
           onChange={setStateOfPostItValue.bind(this, postItId, roomTitle, postItInfo)}
           value={postItInfo.value}
-          onMouseUp={selectPostIt.bind(this, postItId)}
+          onClick={selectPostIt.bind(this, postItId)}
+          onMouseUp={this.consoled.bind(this)}
         />
       </div>
     );

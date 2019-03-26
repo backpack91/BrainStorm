@@ -28,7 +28,8 @@ export default class SharingBoard extends Component{
       setStateOfPostItLocation,
       deletePostIt,
       selectPostIt,
-      postItStyles
+      postItStyles,
+      editPostItStyle
     } = this.props;
 
     return (
@@ -44,6 +45,7 @@ export default class SharingBoard extends Component{
             roomTitle={this.props.match.params.room_id}
             selectPostIt={selectPostIt}
             postItStyles={postItStyles}
+            editPostItStyle={editPostItStyle}
           />
         )
       })
@@ -73,7 +75,7 @@ export default class SharingBoard extends Component{
       selectedPostItId,
       postItStyles
     } = this.props;
-    console.log('postIts in SharingBoard!!!!!!!!!!!', postIts);
+
     return (
       <div className='boardWrapper' onDoubleClick={makePostIt.bind(null, latestPostItId, this.props.match.params.room_id)}>
         <div className="logo">
