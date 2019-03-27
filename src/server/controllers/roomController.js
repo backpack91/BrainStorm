@@ -29,7 +29,6 @@ const createNewRoom = async function (req, res, next) {
     next(err);
   }
 };
-//스타일 객체 생성해주기!
 
 const getRoomInfos = async function (req, res, next) {
   try {
@@ -116,7 +115,10 @@ const deletePostIt = async function (req, res, next) {
     await Room.findOneAndUpdate({
       title: req.params.room_title,
     },{
-      $pull: { postIts: {postit_id: postit_id }}
+      $pull: {
+        postIts: {postit_id: postit_id },
+        postItStyles: {postit_id: postit_id}
+      }
     });
     res.sendStatus(200);
   } catch(err) {
