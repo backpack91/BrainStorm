@@ -49,11 +49,7 @@ const getRoomInfos = async function (req, res, next) {
 const updatePostItContent = async function (req, res, next) {
   try {
     const { modified_postit, postit_id, modified_postit_style } = req.body;
-    console.log('room_title', req.params.room_title);
     if (modified_postit_style) {
-      console.log('modified Style', modified_postit_style);
-      console.log('req.body', req.body);
-      console.log('edit postit style _ server');
       await Room.findOneAndUpdate({
         title: req.params.room_title,
         "postItStyles.postit_id":  postit_id
@@ -62,7 +58,6 @@ const updatePostItContent = async function (req, res, next) {
         $set: { "postItStyles.$": modified_postit_style }
       });
     } else if (modified_postit) {
-      console.log('modified_postit', modified_postit);
       await Room.findOneAndUpdate({
         title: req.params.room_title,
         "postIts.postit_id":  postit_id
