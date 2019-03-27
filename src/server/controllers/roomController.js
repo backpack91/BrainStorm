@@ -29,6 +29,7 @@ const createNewRoom = async function (req, res, next) {
     next(err);
   }
 };
+//스타일 객체 생성해주기!
 
 const getRoomInfos = async function (req, res, next) {
   try {
@@ -48,20 +49,34 @@ const getRoomInfos = async function (req, res, next) {
 
 const updatePostItContent = async function (req, res, next) {
   try {
-    const { modified_postit, postit_id } = req.body;
-
-    await Room.findOneAndUpdate({
-      title: req.params.room_title,
-      "postIts.postit_id":  postit_id
-    },
-    {
-      $set: { "postIts.$": modified_postit }
-    });
+    const { modified_postit, postit_id, modified_postit_style } = req.body;
+    console.log('room_title', req.params.room_title);
+    if (modified_postit_style) {
+      console.log('modified Style', modified_postit_style);
+      console.log('req.body', req.body);
+      console.log('edit postit style _ server');
+      await Room.findOneAndUpdate({
+        title: req.params.room_title,
+        "postItStyles.postit_id":  postit_id
+      },
+      {
+        $set: { "postItStyles.$": modified_postit_style }
+      });
+    } else if (modified_postit) {
+      console.log('modified_postit', modified_postit);
+      await Room.findOneAndUpdate({
+        title: req.params.room_title,
+        "postIts.postit_id":  postit_id
+      },
+      {
+        $set: { "postIts.$": modified_postit }
+      });
+    }
 
     res.sendStatus('200');
-  } catch(err) {
-    next(err);
-  }
+    } catch(err) {
+      next(err);
+    }
 };
 
 const makeNewPostIt = async function (req, res, next) {
@@ -71,11 +86,20 @@ const makeNewPostIt = async function (req, res, next) {
     await Room.findOneAndUpdate({
       title: req.params.room_title,
     },{
-      $addToSet: { postIts: {
-        postit_id,
-        left: "",
-        top: "",
-        value: ""
+      $addToSet: {
+        postIts: {
+          postit_id,
+          left: "",
+          top: "",
+          value: ""
+        },
+        postItStyles: {
+          postit_id,
+          width: '',
+          height: '',
+          color: '',
+          backgroundColor: '',
+          fontSize: ''
         }
       }
     });

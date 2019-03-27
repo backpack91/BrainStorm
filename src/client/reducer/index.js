@@ -152,6 +152,7 @@ export default function reducer (state = initialStates, action) {
           ...state,
           postIts: action.postIts,
           room_title: action.title,
+          postItStyles: action.postItStyles,
           latestPostItId: prevLatestPostItId + 1
         };
       } else {
@@ -174,7 +175,7 @@ export default function reducer (state = initialStates, action) {
       let styleObjInArrCopy;
 
       if (!prevStyles[postItId]) {
-        prevStyles[postItId] = {};
+        prevStyles[postItId] = { postit_id: postItId };
       }
       styleObjInArrCopy = _.cloneDeep(prevStyles[postItId]);
 

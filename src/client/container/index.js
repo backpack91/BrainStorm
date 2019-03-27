@@ -64,7 +64,7 @@ const dispatchUserDisconnectionPartial = (dispatch) => (disconnectedUserName) =>
 
 const dispatchEditPostItStylePartial = (dispatch) => (postItId, prevStyles, styleOption, detail) => {
   dispatch(postItStyle(postItId, prevStyles, styleOption, detail));
-}
+};
 
 socket.on('postit creation', function(data) {
   dispatchMakeNewPostIt(data.postit_id);
@@ -91,7 +91,6 @@ socket.on('delete disconnected user', function(disconnectedUserName) {
 });
 
 socket.on('postit style edit', function(data) {
-  console.log('socket height!1#@#@@#@!##!@', data.detail);
   dispatchEditPostItStyle(data.postItId, data.prevStyles, data.styleOption, data.detail);
 });
 
@@ -160,6 +159,7 @@ const mapDispatchToProps = (dispatch) => {
 
       axios.get(`/api/rooms/${room_title}/roomInfos`)
       .then(res => {
+
         dispatch(bringingRoomInfos(res.data));
       })
       .catch(err => {
@@ -232,7 +232,7 @@ const mapDispatchToProps = (dispatch) => {
           modified_postit: postit_info
         })
         .then(res => {
-          console.log(res);
+          // console.log(res);
         })
         .catch(err => {
           console.log(err);
@@ -276,6 +276,71 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(postItSelection(postItId));
     },
     editPostItStyle: (postItId, prevStyles, styleOption, detail, e) => {
+      let modifiedStyle;
+      let prevStylesCopy = prevStyles.slice();
+      let styleObjInArrCopy;
+
+      if (!prevStylesCopy[postItId]) {
+        prevStylesCopy[postItId] = { postit_id: postItId };
+      }
+      styleObjInArrCopy = _.cloneDeep(prevStylesCopy[postItId]);
+
+      switch(styleOption) {
+        case 'fontSize':
+          modifiedStyle = Object.assign(styleObjInArrCopy, {
+            fontSize: detail
+          });
+          prevStylesCopy[postItId] = modifiedStyle;
+          break;
+
+        case 'color':
+          modifiedStyle = Object.assign(styleObjInArrCopy, {
+            color: detail
+          });
+          prevStylesCopy[postItId] = modifiedStyle;
+          break;
+
+        case 'backgroundColor':
+          if (
+            detail === '#697689'
+            || detail === '#555555'
+          ) {
+            modifiedStyle = Object.assign(styleObjInArrCopy, {
+              backgroundColor: detail,
+              color: 'white'
+            });
+          } else {
+            modifiedStyle = Object.assign(styleObjInArrCopy, {
+              backgroundColor: detail,
+              color: 'black'
+            });
+          }
+          prevStylesCopy[postItId] = modifiedStyle;
+          break;
+
+        case 'boxSize':
+          modifiedStyle = Object.assign(styleObjInArrCopy, {
+            width: detail.width,
+            height: detail.height
+          });
+          prevStylesCopy[postItId] = modifiedStyle;
+          break;
+      }
+
+      function requestUpdateValue() {
+        axios.post(`/api/rooms/${room_id}/modifiedRoomInfos`, {
+          postit_id: postItId,
+          modified_postit_style: prevStylesCopy[postItId]
+        })
+        .then(res => {
+          console.log(res);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+      }
+
+      _.debounce(requestUpdateValue, 100)();
       socket.emit('postit style edit', {
         room_id,
         postItId,

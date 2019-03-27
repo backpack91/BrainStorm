@@ -8,12 +8,19 @@ const RoomsSchema = new Schema({
   postIts: [
     {
       postit_id: Number,
-      font_size: String,
-      width: String,
-      height: String,
       left: String,
       top: String,
       value: String
+    }
+  ],
+  postItStyles: [
+    {
+      postit_id: Number,
+      width: String,
+      height: String,
+      color: String,
+      backgroundColor: String,
+      fontSize: String
     }
   ]
 });

@@ -15,15 +15,6 @@ import {
   POSTIT_STYLE
 } from '../constants/actionTypes.js';
 
-// export function roomCreation(roomData) {
-//   return  {
-//     type: ROOM_CREATION,
-//     room_title: roomData.title,
-//     board_infos: roomData.board_infos,
-//     user_ids: roomData.user_ids
-//   };
-// }
-
 export function roomTitle(text) {
   return {
     type: ROOM_TITLE,
@@ -102,7 +93,8 @@ export function bringingRoomInfos(roomInfos) {
   return {
     type: BRINGING_ROOM_INFOS,
     postIts: roomInfos.postIts,
-    room_title: roomInfos.title
+    room_title: roomInfos.title,
+    postItStyles: roomInfos.postItStyles
   };
 }
 

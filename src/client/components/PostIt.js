@@ -84,7 +84,7 @@ export default class Postit extends Component{
       postItStyles,
       editPostItStyle
     } = this.props;
-    
+
     const location = {
       left: `${postItInfo.left}px`,
       top: `${postItInfo.top}px`

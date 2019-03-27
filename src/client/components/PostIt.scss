@@ -8,6 +8,55 @@
   box-shadow: rgba(0, 0, 0, 0.6) 0px 3px 8px 0px;
 
   .postItHeader {
+    transition: all 0.3s;
+    width: 100%;
+    height: 0;
+    cursor: move;
+    bottom: 100%;
+    position: absolute;
+    z-index: 10;
+    background-color: #ff8a65;
+    color: #fff;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    input {
+      margin: 0;
+    }
+
+    i {
+      display: none;
+    }
+  }
+
+  textarea {
+    display: block;
+    padding: 1rem;
+    width: 7rem;
+    background-color: white;
+    border: none;
+    font-size: 1.5rem;
+    color: black;
+    transition: background 0.5s, font-size 0.5s;
+  }
+
+  textarea:focus {
+    outline-color: white;
+  }
+}
+
+.postIt:hover {
+  top: 35%;
+  left: 35%;
+  position: absolute;
+  z-index: 9;
+  text-align: center;
+  // box-shadow: rgba(219, 219, 219, 0.5) 0px 3px 8px 1px;
+  box-shadow: rgba(0, 0, 0, 0.6) 0px 3px 8px 0px;
+
+  .postItHeader {
+    transition: height 0.3s;
     width: 100%;
     height: 1.3rem;
     cursor: move;
