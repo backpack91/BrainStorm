@@ -10,18 +10,6 @@ const s3 = new aws.S3({
   region: 'ap-northeast-2'
 });
 
-// const uploadReceiptImages = multer({
-//   storage: multerS3({
-//     s3: s3,
-//     bucket: 'wondanggui-images',
-//     key: function (req, file, cb) {
-//       let fileNameWithDirectory = `user_receipt_images/${req.query.uid}`;
-//
-//       cb(null, fileNameWithDirectory);
-//     }
-//   })
-// });
-
 const uploadPostItImages = (req, res, next) => {
   return multer({
     storage: multerS3({
