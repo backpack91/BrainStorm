@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import './PostIt.scss';
 import Textarea from 'react-textarea-autosize';
+import _ from 'lodash';
 
 export default class Postit extends Component{
   constructor(props) {
     super(props);
 
     this.postIt = React.createRef();
+    this.renderImg = this.renderImg.bind(this);
   }
 
   componentDidMount() {
@@ -73,6 +75,12 @@ export default class Postit extends Component{
     e.stopPropagation();
   }
 
+  renderImg() {
+    return (
+      <img src={this.props.postItInfo.image}></img>
+    );
+  }
+
   render() {
     const {
       setStateOfPostItValue,
@@ -84,11 +92,16 @@ export default class Postit extends Component{
       postItStyles,
       editPostItStyle
     } = this.props;
-
     const location = {
       left: `${postItInfo.left}px`,
       top: `${postItInfo.top}px`
     };
+    const textareaWithImage = {width: '13rem', height: '2rem', resize: 'none'};
+    let postItStylesClone;
+
+    if (postItStyles.length && postItStyles[postItId]) {
+      postItStylesClone = _.cloneDeep(postItStyles);
+    }
 
     return (
       <div
@@ -100,13 +113,31 @@ export default class Postit extends Component{
         <div className="postItHeader">
           <i className="fas fa-times" onClick={deletePostIt.bind(this, postItId)}></i>
         </div>
-        <textarea
-          style={postItStyles.length && postItStyles[postItId] ? postItStyles[postItId] : {}}
-          onChange={setStateOfPostItValue.bind(this, postItId, roomTitle, postItInfo)}
-          value={postItInfo.value}
-          onClick={selectPostIt.bind(this, postItId)}
-          onMouseUp={this.consoled.bind(this)}
-        />
+        { postItInfo.image ? this.renderImg() : null}
+        { postItInfo.image
+          ? (
+            <textarea
+              style={
+                postItStylesClone && postItStylesClone.length && postItStylesClone[postItId]
+                ? Object.assign(postItStylesClone[postItId],textareaWithImage)
+                : textareaWithImage
+              }
+              onChange={setStateOfPostItValue.bind(this, postItId, roomTitle, postItInfo)}
+              value={postItInfo.value}
+              onClick={selectPostIt.bind(this, postItId)}
+              onMouseUp={this.consoled.bind(this)}
+            />
+          )
+          : (
+            <textarea
+              style={postItStyles.length && postItStyles[postItId] ? postItStyles[postItId] : {}}
+              onChange={setStateOfPostItValue.bind(this, postItId, roomTitle, postItInfo)}
+              value={postItInfo.value}
+              onClick={selectPostIt.bind(this, postItId)}
+              onMouseUp={this.consoled.bind(this)}
+            />
+          )
+        }
       </div>
     );
   }

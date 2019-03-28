@@ -11,14 +11,16 @@ export default class Footer extends Component{
   }
 
   renderUserIcon() {
-    return this.props.userList.map(user => {
+    console.log('userCahracter', this.props.userList);
+
+    return this.props.userList.map((user, index) => {
       if (user !== this.props.userName) {
         return  (
           <div className='userIconWrapper'>
             <div className='userName'>
               {user}
             </div>
-            <img src='../../../public/imgs/1.png'></img>
+            <img src={`../../../public/imgs/${index}.png`}></img>
           </div>
         );
       } else {
@@ -27,7 +29,7 @@ export default class Footer extends Component{
             <div className='userName'>
               {user}
             </div>
-            <img src='../../../public/imgs/1.png'></img>
+            <img src={`../../../public/imgs/${index}.png`}></img>
             <div className='meTag'>나</div>
           </div>
         );

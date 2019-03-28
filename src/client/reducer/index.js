@@ -12,7 +12,9 @@ import {
   USER_DISCONNECTION,
   BRINGING_ROOM_INFOS,
   POSTIT_SELECTION,
-  POSTIT_STYLE
+  POSTIT_STYLE,
+  PICTURE_SUBMISSION_FORM,
+  PICTURE_SUBMISSION
 } from '../constants/actionTypes.js';
 import _ from 'lodash';
 
@@ -26,11 +28,13 @@ const initialStates = {
   userList: [],
   chosenPostIt: '',
   postItStyles: [],
-  selectedPostIt: ''
+  selectedPostIt: '',
+  modalType: 'USERNAME_SUBMISSION'
 };
 
 export default function reducer (state = initialStates, action) {
   const postItsClone = state.postIts.slice();
+  let userListCopy;
 
   switch (action.type) {
     case ROOM_TITLE:
@@ -115,17 +119,19 @@ export default function reducer (state = initialStates, action) {
       return {
         ...state,
         userName: action.userName,
-        isModalOpened: false
+        isModalOpened: false,
       };
 
     case USER_PARTICIPATION:
+      userListCopy = action.userList.slice();
+
       return {
         ...state,
-        userList: action.userList
+        userList: userListCopy
       };
 
     case USER_DISCONNECTION:
-      let userListCopy = state.userList.slice();
+      userListCopy = state.userList.slice();
 
       state.userList.forEach((user, index) => {
         if (user === action.disconnectedUserName) {
@@ -239,6 +245,22 @@ export default function reducer (state = initialStates, action) {
             postItStyles: prevStylesCopy
           };
       }
+
+      case PICTURE_SUBMISSION_FORM:
+        return {
+          ...state,
+          modalType: action.modalType,
+          isModalOpened: action.isModalOpened
+        };
+
+      case PICTURE_SUBMISSION:
+        postItsClone[action.selectedPostItId].image = action.imageUrl;
+
+        return {
+          ...state,
+          isModalOpened: action.isModalOpened,
+          postIts: postItsClone,
+        };
 
     default:
       return state;

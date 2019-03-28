@@ -4,11 +4,11 @@ module.exports = function (env) {
   switch(env){
     case "development":
       return {
-        url: `mongodb://admin:${credential.ATLAS_USER_PASSWORD}@ds117806.mlab.com:17806/brainstorm`,
+        url: `mongodb://admin:${credential.MONGODB_USER_PASSWORD}@ds117806.mlab.com:17806/brainstorm`,
       };
     default:
       return {
-        url: `mongodb://admin:${credential.ATLAS_USER_PASSWORD}@ds117806.mlab.com:17806/brainstorm`,
+        url: `mongodb://admin:${credential.MONGODB_USER_PASSWORD}@ds117806.mlab.com:17806/brainstorm`,
       };
   }
 };

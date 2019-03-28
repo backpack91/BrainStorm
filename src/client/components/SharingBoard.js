@@ -4,6 +4,7 @@ import DecorationMenu from './DecorationMenu'
 import Footer from './Footer.js';
 import PostIt from './PostIt.js';
 import Modal from './Modal.js';
+import PictureSubmissionForm from './pictureSubmissionForm.js';
 
 export default class SharingBoard extends Component{
   constructor(props) {
@@ -73,7 +74,10 @@ export default class SharingBoard extends Component{
       postIts,
       editPostItStyle,
       selectedPostItId,
-      postItStyles
+      postItStyles,
+      openPictureSubmissionFormModal,
+      modalType,
+      submitPicture
     } = this.props;
 
     return (
@@ -92,6 +96,7 @@ export default class SharingBoard extends Component{
           editPostItStyle={editPostItStyle}
           selectedPostItId={selectedPostItId}
           postItStyles={postItStyles}
+          openPictureSubmissionFormModal={openPictureSubmissionFormModal}
         />
         <Footer
           toggleUrlbox={toggleUrlbox}
@@ -103,13 +108,33 @@ export default class SharingBoard extends Component{
           isModalOpened
           ? (
             <Modal toggleModal={toggleModal}>
-              <div className='nameSubmissionForm'>
-                <div className='formBody'>
-                  <div></div>
-                  <input placeholder='your name' onChange={this.getUserName}></input>
-                  <button onClick={joinRoom.bind(null, this.props.match.params.room_id, this.state.user_name)}>submit</button>
-                </div>
-              </div>
+              {modalType === 'USERNAME_SUBMISSION'
+                ? (
+                  <div className='nameSubmissionForm'>
+                    <div className='formBody'>
+                      <div></div>
+                      <input placeholder='your name' onChange={this.getUserName}></input>
+                      <button onClick={joinRoom.bind(null, this.props.match.params.room_id, this.state.user_name)}>submit</button>
+                    </div>
+                  </div>
+                )
+                : null
+              }
+              {modalType === 'PICTURE_SUBMISSION_FORM'
+                ? (
+                    <div className='pictureSubmissionForm'>
+                      <div className='formBody'>
+                        <PictureSubmissionForm
+                          roomTitle={this.props.match.params.room_id}
+                          selectedPostItId={selectedPostItId}
+                          submitPicture={submitPicture}
+                          postIts={postIts}
+                        />
+                      </div>
+                    </div>
+                )
+                : null
+              }
             </Modal>
           )
           : null

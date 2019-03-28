@@ -1,0 +1,104 @@
+.imageSubmissionModalForm {
+  width: 30rem;
+  height: 22rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #FF7043;
+  padding: 2rem 0 1rem 0;
+  border-radius: 0.5rem;
+
+  .modalTitle {
+    font-size: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .imageUploaderWrapper {
+    color: white;
+    background-color: #FF7043;
+    width: 23rem;
+    height: 62%;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2%;
+    text-align: center;
+
+    .imgPreview {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 23rem;
+      height: 15rem;
+      overflow: hidden;
+      color: gray;
+      margin-bottom: 0.5rem;
+      background-color: #FF8A65;
+      border-bottom: solid 2px #BF360C;
+      color: white;
+
+      .previewText {
+        width: 23rem;
+        height: 15rem;
+
+        i {
+          position: absolute;
+          height: 15rem;
+          width: 23rem;
+          top: 7%;
+          left: 3%;
+          text-align: center;
+          font-size: 10rem;
+        }
+      }
+
+
+      img {
+        width: 23rem;
+        height: 15rem;
+      }
+
+      .fileTypeAlert {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        background-color: white;
+        color: red;
+        width: 23rem;
+        height: 15rem;
+      }
+    }
+
+    .fileInput {
+    border-bottom: solid 2px #BF360C;
+    }
+
+    .submitBtn {
+      position: absolute;
+      bottom: 2rem;
+      left: 33.33%;
+      // width: 12rem;
+      font-size: 1.5rem;
+      color: gray;
+      background-color: gold;
+      width: 33%;
+      height: 3rem;
+      // border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: rgba(0, 0, 0, 0.4) 0px 3px 8px 0px;
+    }
+
+    .submitBtn:focus {
+      outline: none;
+    }
+  }
+}

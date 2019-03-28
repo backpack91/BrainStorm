@@ -1,5 +1,4 @@
 import {
-  // ROOM_CREATION,
   ROOM_TITLE,
   POSTIT_CREATION,
   POSTIT_LOCATION,
@@ -12,7 +11,9 @@ import {
   USER_DISCONNECTION,
   BRINGING_ROOM_INFOS,
   POSTIT_SELECTION,
-  POSTIT_STYLE
+  POSTIT_STYLE,
+  PICTURE_SUBMISSION_FORM,
+  PICTURE_SUBMISSION
 } from '../constants/actionTypes.js';
 
 export function roomTitle(text) {
@@ -112,5 +113,22 @@ export function postItStyle(postItId, prevStyles, styleOption, detail) {
     styleOption,
     prevStyles,
     detail
+  };
+}
+
+export function pictureSubmissionForm() {
+  return {
+    type: PICTURE_SUBMISSION_FORM,
+    modalType: 'PICTURE_SUBMISSION_FORM',
+    isModalOpened: true
+  };
+}
+
+export function pictureSubmission(imageUrl, selectedPostItId) {
+  return {
+    type: PICTURE_SUBMISSION,
+    isModalOpened: false,
+    imageUrl,
+    selectedPostItId
   };
 }

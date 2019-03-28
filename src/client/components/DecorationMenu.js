@@ -31,7 +31,8 @@ class DecorationMenu extends Component {
     const {
       editPostItStyle,
       selectedPostItId,
-      postItStyles
+      postItStyles,
+      openPictureSubmissionFormModal
     } = this.props;
 
     return (
@@ -70,7 +71,10 @@ class DecorationMenu extends Component {
             <div className="iconWrapper">
               <i className="fas fa-stamp"></i>
             </div>
-            <div className="iconWrapper">
+            <div
+              className="iconWrapper"
+              onClick={openPictureSubmissionFormModal}
+            >
               <i className="far fa-image"></i>
             </div>
             <div className="iconWrapper">

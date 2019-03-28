@@ -22,13 +22,16 @@ import {
   userDisconnection,
   bringingRoomInfos,
   postItSelection,
-  postItStyle
+  postItStyle,
+  pictureSubmissionForm,
+  pictureSubmission
 } from '../actions';
 
-let socket = io.connect(`http://localhost:8080/`, {
-  timeout: 300000
+let socket = io.connect(`http://192.168.0.32:8080/`, {
+  timeout: 6000000
 });
 
+let ip = 'http://192.168.0.32:3000';
 let room_id;
 let dispatchMakeNewPostIt;
 let dispatchUpdatePostItValue;
@@ -37,6 +40,7 @@ let dispatchDeletePostIt;
 let dispatchUserParticipation;
 let dispatchUserDisconnection;
 let dispatchEditPostItStyle;
+let dispatchAttachImageToPostIt;
 
 const dispatchMakeNewPostItPartial = (dispatch) => (id, room_id) => {
   dispatch(postItCreation(id, room_id));
@@ -66,6 +70,10 @@ const dispatchEditPostItStylePartial = (dispatch) => (postItId, prevStyles, styl
   dispatch(postItStyle(postItId, prevStyles, styleOption, detail));
 };
 
+const dispatchAttachImageToPostItPartial = (dispatch) => (imageUrl, postItId) => {
+  dispatch(pictureSubmission(imageUrl, postItId));
+}
+
 socket.on('postit creation', function(data) {
   dispatchMakeNewPostIt(data.postit_id);
 });
@@ -94,6 +102,11 @@ socket.on('postit style edit', function(data) {
   dispatchEditPostItStyle(data.postItId, data.prevStyles, data.styleOption, data.detail);
 });
 
+socket.on('attach image to postit', function(data) {
+  console.log('attach image to postit', data);
+  dispatchAttachImageToPostIt(data.imageUrl, data.postItId);
+});
+
 class AppContainer extends Component {
   componentDidMount() {
     this.props.onMount();
@@ -116,7 +129,8 @@ const mapStateToProps = (state) => {
     userName: state.userName,
     userList: state.userList,
     postItStyles: state.postItStyles,
-    selectedPostItId: state.selectedPostItId
+    selectedPostItId: state.selectedPostItId,
+    modalType: state.modalType
   };
 };
 
@@ -131,7 +145,7 @@ const mapDispatchToProps = (dispatch) => {
   dispatchUserParticipation = dispatchUserParticipationPartial(dispatch);
   dispatchUserDisconnection = dispatchUserDisconnectionPartial(dispatch);
   dispatchEditPostItStyle = dispatchEditPostItStylePartial(dispatch);
-
+  dispatchAttachImageToPostIt = dispatchAttachImageToPostItPartial(dispatch);
   return {
     onMount: () => {
       axios.get('/')
@@ -141,7 +155,7 @@ const mapDispatchToProps = (dispatch) => {
     },
     createNewRoom: (room_title, e) => {
       if (room_title) {
-        axios.get(`/api/rooms/${room_title}/new`)
+        axios.get(`${ip}/api/rooms/${room_title}/new`)
         .then(res => {
           if (res.status === 200) {
             history.push(`/room/${room_title}`);
@@ -157,7 +171,7 @@ const mapDispatchToProps = (dispatch) => {
     getRoomInfos: (room_title) => {
       room_id = room_title;
 
-      axios.get(`/api/rooms/${room_title}/roomInfos`)
+      axios.get(`${ip}/api/rooms/${room_title}/roomInfos`)
       .then(res => {
 
         dispatch(bringingRoomInfos(res.data));
@@ -184,7 +198,7 @@ const mapDispatchToProps = (dispatch) => {
         postit_id: latestPostItId
       });
 
-      axios.post(`/api/rooms/${room_id}/newPostIt`, {
+      axios.post(`${ip}/api/rooms/${room_id}/newPostIt`, {
         postit_id: latestPostItId
       })
       .then(res => {
@@ -201,7 +215,7 @@ const mapDispatchToProps = (dispatch) => {
       postit_info.value = value;
 
       function requestUpdateValue() {
-        axios.post(`/api/rooms/${room_title}/modifiedRoomInfos`, {
+        axios.post(`${ip}/api/rooms/${room_title}/modifiedRoomInfos`, {
           postit_id,
           modified_postit: postit_info
         })
@@ -227,7 +241,7 @@ const mapDispatchToProps = (dispatch) => {
       postit_info.top = top;
 
       function requestUpdateLocation() {
-        axios.post(`/api/rooms/${room_title}/modifiedRoomInfos`, {
+        axios.post(`${ip}/api/rooms/${room_title}/modifiedRoomInfos`, {
           postit_id,
           modified_postit: postit_info
         })
@@ -249,7 +263,7 @@ const mapDispatchToProps = (dispatch) => {
       });
     },
     deletePostIt: (postit_id, e) => {
-      axios.post(`/api/rooms/${room_id}/postItDeletion`, {
+      axios.post(`${ip}/api/rooms/${room_id}/postItDeletion`, {
         postit_id,
       })
       .then(res => {
@@ -328,7 +342,7 @@ const mapDispatchToProps = (dispatch) => {
       }
 
       function requestUpdateValue() {
-        axios.post(`/api/rooms/${room_id}/modifiedRoomInfos`, {
+        axios.post(`${ip}/api/rooms/${room_id}/modifiedRoomInfos`, {
           postit_id: postItId,
           modified_postit_style: prevStylesCopy[postItId]
         })
@@ -349,6 +363,18 @@ const mapDispatchToProps = (dispatch) => {
         detail
       });
       dispatch(postItStyle(postItId, prevStyles, styleOption, detail));
+    },
+    openPictureSubmissionFormModal : () => {
+      dispatch(pictureSubmissionForm());
+    },
+    submitPicture: (imageUrl, selectedPostItId) => {
+      dispatch(pictureSubmission(imageUrl, selectedPostItId));
+
+      socket.emit('attach image to postit', {
+        room_id,
+        postItId: selectedPostItId,
+        imageUrl
+      });
     }
   };
 };

@@ -30,7 +30,10 @@ class App extends Component {
       selectPostIt,
       postItStyles,
       editPostItStyle,
-      selectedPostItId
+      selectedPostItId,
+      openPictureSubmissionFormModal,
+      modalType,
+      submitPicture
     } = this.props.appState;
 
     return (
@@ -71,6 +74,9 @@ class App extends Component {
                 postItStyles={postItStyles}
                 editPostItStyle={editPostItStyle}
                 selectedPostItId={selectedPostItId}
+                openPictureSubmissionFormModal={openPictureSubmissionFormModal}
+                modalType={modalType}
+                submitPicture={submitPicture}
               />}
           />
         </div>

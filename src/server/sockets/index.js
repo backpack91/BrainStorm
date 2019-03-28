@@ -63,5 +63,9 @@ module.exports = function(server, roomTitle) {
     socket.on('postit style edit', (data) => {
       socket.to(data.room_id).emit('postit style edit', data);
     });
+
+    socket.on('attach image to postit', (data) => {
+      socket.to(data.room_id).emit('attach image to postit', data);
+    });
   });
 };
