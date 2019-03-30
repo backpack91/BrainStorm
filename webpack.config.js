@@ -9,7 +9,7 @@ const dirSrc = path.join(__dirname, 'src');
 const outputDirectory = 'dist';
 
 module.exports = {
-  entry: './src/client/index.js',
+  entry: ['@babel/polyfill','./src/client/index.js'],
   output: {
     path: path.join(__dirname, outputDirectory),
     filename: 'bundle.js',
@@ -77,7 +77,7 @@ module.exports = {
     open: false,
     host: '0.0.0.0',
     proxy: {
-      '/api': 'http://localhost:8080'
+      '/api': 'http://localhost:8081'
     },
     historyApiFallback: true
   },

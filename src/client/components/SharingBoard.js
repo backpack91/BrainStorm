@@ -4,7 +4,7 @@ import DecorationMenu from './DecorationMenu'
 import Footer from './Footer.js';
 import PostIt from './PostIt.js';
 import Modal from './Modal.js';
-import PictureSubmissionForm from './pictureSubmissionForm.js';
+import PictureSubmissionForm from './PictureSubmissionForm.js';
 
 export default class SharingBoard extends Component{
   constructor(props) {

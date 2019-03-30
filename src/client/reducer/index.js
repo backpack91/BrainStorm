@@ -44,7 +44,6 @@ export default function reducer (state = initialStates, action) {
       };
 
     case POSTIT_CREATION:
-      console.log('action.id', action.id);
       postItsClone[action.id] = {
         postit_id: action.id,
         left: action.left,

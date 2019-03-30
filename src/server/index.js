@@ -9,9 +9,9 @@ const env = 'development';
 const db = require('./config/database')(env);
 require('./database').connect(db.url);
 
-// app.get('/', function(req, res){
-//   res.sendFile(__dirname + '/index.html');
-// });
+app.get('/room/*', function(req, res){
+  res.sendFile('index.html', { root: './dist/' });
+});
 
 app.use(express.static('dist'));
 app.use('/api', route);
@@ -31,7 +31,7 @@ app.use(function(err, req, res, next) {
   res.json({error: err.message});
 });
 
-server.listen(8080, function () {
+server.listen(8081, function () {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Express listening on port http://%s:%s', host, port);

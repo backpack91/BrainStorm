@@ -11,8 +11,6 @@ export default class Footer extends Component{
   }
 
   renderUserIcon() {
-    console.log('userCahracter', this.props.userList);
-
     return this.props.userList.map((user, index) => {
       if (user !== this.props.userName) {
         return  (

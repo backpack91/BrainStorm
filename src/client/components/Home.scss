@@ -16,10 +16,11 @@
     .bulb {
       transition: all 0.5s ease-out;
       position: absolute;
-      top: -10%;
-      height: -20%;
+      top: 7rem;
+      right: 14rem;
+      height: 0;
       color: white;
-      font-size: 49rem;
+      font-size: 27rem;
     }
 
     .homeTitleWrapper {
@@ -146,11 +147,11 @@
     .bulb {
       transform: all 0.5s ease-out;
       position: absolute;
-      top: -10%;
-      height: -20%;
+      top: 7rem;
+      right: 14rem;
       color: gold;
-      font-size: 49rem;
-      transform:rotate(15deg);
+      font-size: 27rem;
+      transform:rotate(10deg);
     }
 
     .homeTitleWrapper {

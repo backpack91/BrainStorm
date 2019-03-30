@@ -19,23 +19,20 @@ class PictureSubmissionForm extends Component {
     const {
       selectedPostItId,
       submitPicture,
-      // postIts
     } = this.props;
     const target = e.target;
     e.preventDefault();
     const formData = new FormData();
-    // const objArr = [];
 
     formData.append('postit_attach_image', this.state.file);
 
     axios({
       method: 'post',
-      url: `http://192.168.0.32:3000/api/rooms/${this.props.roomTitle}/newImage?selectedPostItId=${selectedPostItId}`,
+      url: `/api/rooms/${this.props.roomTitle}/newImage?selectedPostItId=${selectedPostItId}`,
       data: formData,
       config: { headers: {'Content-Type': `multipart/form-data boundary=${formData._boundary}` }}
     })
     .then(res => {
-      // console.log('postIts', postIts);
       console.log('res: ',res);
       submitPicture(res.data.imageUrl, selectedPostItId);
     })

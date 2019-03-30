@@ -27,11 +27,13 @@ import {
   pictureSubmission
 } from '../actions';
 
-let socket = io.connect(`http://192.168.0.32:8080/`, {
-  timeout: 6000000
-});
+// let socket = io.connect(`http://192.168.0.32:8081/`, {
+//   timeout: 6000000
+// });
+let socket = io.connect();
 
-let ip = 'http://192.168.0.32:3000';
+// let ip = 'http://192.168.0.32:3000';
+let ip = '';
 let room_id;
 let dispatchMakeNewPostIt;
 let dispatchUpdatePostItValue;
@@ -160,7 +162,7 @@ const mapDispatchToProps = (dispatch) => {
           if (res.status === 200) {
             history.push(`/room/${room_title}`);
           } else if (res.status === 204) {
-            alert('이미 존재하는 방 이름 입니다. 창의력을 발휘해 주세요 ;)');
+            alert('이미 존재하는 방 이름 입니다.');
           }
         })
         .catch(err => {
