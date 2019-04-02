@@ -35,7 +35,7 @@ npm start
 
 
 
-**Skills**
+## **Skills**
 
 ------
 
@@ -64,13 +64,13 @@ npm start
 
 
 
-### **Test**
+## **Test**
 
 - Jest와 Enzyme을 이용하여 Component 단위 테스트 구현
 
 
 
-### **Version Control And Collaboration**
+## **Version Control And Collaboration**
 
 - Git과 Github을 사용하여 빠르고 효과적으로 Version Control
 - Trello를 사용한 Schedule Sharing
@@ -83,7 +83,7 @@ npm start
 
 
 
-### **Challenges**
+## **Challenges**
 
 - socket.io 라이브러리를 처음으로 다뤄보았기 때문에 개념을 이해하고 활용하는데 시간이 많이 할애했습니다
 - 생성된 방에서 사용하는 포스트잇의 데이터 양이 많지 않을것으로 판단하여 포스트잇 정보를 비정규화하여 저장했습니다. 그로인해 이전에 하던 DB작업보다 다양한 쿼리를 다뤄야 해서 mongoDB문서를 더 자세히 들여다 보는 계기가 되었습니다
@@ -91,7 +91,7 @@ npm start
 
 
 
-### **Things to do**
+## **Things to do**
 
 - video 첨부
 - 포스트잇 스티커 첨부기능
