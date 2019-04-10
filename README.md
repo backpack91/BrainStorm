@@ -37,7 +37,7 @@ npm start
 
 ## **Skills**
 
-## **1.Frontend-Side**
+### **1.Frontend-Side**
 
 - Modern Javascript(ES2015+)
 
@@ -51,7 +51,7 @@ npm start
 
 - Socket.io Client를 이용하여 실시간 포스트잇 정보 전달 구현
 
-## **2.Backend-Side**
+### **2.Backend-Side**
 
 - Modern Javascript(ES2015+)
 - Node.js
