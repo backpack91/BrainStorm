@@ -37,8 +37,6 @@ npm start
 
 ## **Skills**
 
-------
-
 ## **1.Frontend-Side**
 
 - Modern Javascript(ES2015+)
