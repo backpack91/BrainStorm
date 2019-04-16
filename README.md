@@ -23,15 +23,8 @@ BrainStorm은 실시간 아이디어 회의 애플리케이션으로서 실시�
 (방만들기)
 ![](gif/BrainStorm_room-creation.gif)
 
-(초대하기 & 포스트잇 생성과 수정)
-![](gif/BrainStorm_postit-creation.gif)
-
-(이미지 첨부)
-![](gif/BrainStorm_image-attachment.gif)
-
-(포스트잇 정보 DB 저장)
-![](gif/BrainStorm_store-postitInfo-in-db.gif)
-
+(포스트잇 생성, 수정)
+![](gif/BrainStorm_test-play.gif)
 
 ## **Installation**
 
