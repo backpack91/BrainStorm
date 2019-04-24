@@ -4,6 +4,7 @@ const server = require('http').createServer(app);
 const route = require('./config/route.js');
 const os = require('os');
 const env = 'development';
+var cors = require('cors');
 
 //credentials
 const db = require('./config/database')(env);
@@ -13,6 +14,7 @@ app.get('/room/*', function(req, res){
   res.sendFile('index.html', { root: './dist/' });
 });
 
+app.use(cors());
 app.use(express.static('dist'));
 app.use('/api', route);
 

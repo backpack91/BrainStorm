@@ -27,12 +27,12 @@ import {
   pictureSubmission
 } from '../actions';
 
-let socket = io.connect('http://192.168.0.49:8081/', {
+let socket = io.connect('http://10.3.20.217:8081/', {
   timeout: 6000000
 });
 // let socket = io.connect();
 
-let ip = 'http://192.168.0.49:3000';
+let ip = 'http://10.3.20.217:3000';
 // let ip = '';
 let room_id;
 let dispatchMakeNewPostIt;
@@ -105,7 +105,6 @@ socket.on('postit style edit', function(data) {
 });
 
 socket.on('attach image to postit', function(data) {
-  console.log('attach image to postit', data);
   dispatchAttachImageToPostIt(data.imageUrl, data.postItId);
 });
 
@@ -159,9 +158,7 @@ const mapDispatchToProps = (dispatch) => {
       if (room_title) {
         axios.get(`${ip}/api/rooms/${room_title}/new`)
         .then(res => {
-          console.log('accept response')
           if (res.status === 200) {
-            console.log('push!!!!')
             history.push(`/room/${room_title}`);
           } else if (res.status === 204) {
             alert('이미 존재하는 방 이름 입니다.');
@@ -218,20 +215,17 @@ const mapDispatchToProps = (dispatch) => {
       const value = e.target.value;
       postit_info.value = value;
 
-      function requestUpdateValue() {
-        axios.post(`${ip}/api/rooms/${room_title}/modifiedRoomInfos`, {
-          postit_id,
-          modified_postit: postit_info
-        })
-        .then(res => {
-          console.log(res);
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      }
+      axios.post(`${ip}/api/rooms/${room_title}/modifiedRoomInfos`, {
+        postit_id,
+        modified_postit: postit_info
+      })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
 
-      _.debounce(requestUpdateValue, 100)();
       socket.emit('update postit value', {
         room_id,
         socket_id: socket.id,
@@ -244,20 +238,17 @@ const mapDispatchToProps = (dispatch) => {
       postit_info.left = left;
       postit_info.top = top;
 
-      function requestUpdateLocation() {
-        axios.post(`${ip}/api/rooms/${room_title}/modifiedRoomInfos`, {
-          postit_id,
-          modified_postit: postit_info
-        })
-        .then(res => {
-          // console.log(res);
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      }
+      axios.post(`${ip}/api/rooms/${room_title}/modifiedRoomInfos`, {
+        postit_id,
+        modified_postit: postit_info
+      })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
 
-      _.debounce(requestUpdateLocation, 100)();
       socket.emit('update postit location', {
         room_id,
         socket_id: socket.id,
@@ -345,20 +336,17 @@ const mapDispatchToProps = (dispatch) => {
           break;
       }
 
-      function requestUpdateValue() {
-        axios.post(`${ip}/api/rooms/${room_id}/modifiedRoomInfos`, {
-          postit_id: postItId,
-          modified_postit_style: prevStylesCopy[postItId]
-        })
-        .then(res => {
-          console.log(res);
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      }
+      axios.post(`${ip}/api/rooms/${room_id}/modifiedRoomInfos`, {
+        postit_id: postItId,
+        modified_postit_style: prevStylesCopy[postItId]
+      })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
 
-      _.debounce(requestUpdateValue, 100)();
       socket.emit('postit style edit', {
         room_id,
         postItId,

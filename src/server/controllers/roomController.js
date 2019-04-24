@@ -6,10 +6,12 @@ const ObjectId = mongoose.Types.ObjectId;
 
 const createNewRoom = async function (req, res, next) {
   try {
+    console.log('create room Request is accepted!!!!')
     const room_title = String(req.params.room_title);
     const roomFound = await Room.findOne({title: room_title});
-
+    console.log('roomFound?', roomFound);
     if (roomFound === null) {
+      console.log('true');
       const _id = new ObjectId();
       const roomCreation = await Room.create({
         _id,
