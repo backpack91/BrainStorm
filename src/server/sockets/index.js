@@ -1,13 +1,15 @@
 const socketIO = require('socket.io');
 const clients = {};
 
-module.exports = function(server, roomTitle) {
-  const io = socketIO(server);
+module.exports = function(server) {
+  const io = socketIO(server, {
+    'pingInterval': 2000000,
+    'pingTimeout': 2000000
+  });
   const sockets = [];
 
   io.on('connection', function(socket) {
     console.log('connected: ', socket.id);
-    let currentRoom;
 
     socket.on('disconnect', (reason) => {
       if (reason === 'transport close') {
@@ -32,7 +34,6 @@ module.exports = function(server, roomTitle) {
         }
       );
 
-      currentRoom = data.room_id;
       socket.join(data.room_id);
 
       sockets.forEach(user => {
@@ -41,7 +42,7 @@ module.exports = function(server, roomTitle) {
         }
       });
 
-      io.to(data.room_id).emit('update users in room', currentRoomUsers);;
+      io.to(data.room_id).emit('update users in room', currentRoomUsers);
     });
 
     socket.on('postit creation', (data) => {

@@ -27,13 +27,17 @@ import {
   pictureSubmission
 } from '../actions';
 
-let socket = io.connect('http://10.3.20.217:8081/', {
-  timeout: 6000000
+// let socket = io.connect('http://172.30.1.10:8081/', {
+//   'pingInterval': 2000000,
+//   'pingTimeout': 2000000
+// });
+let socket = io.connect(null, {
+  pingInterval: 2000000,
+  pingTimeout: 2000000
 });
-// let socket = io.connect();
 
-let ip = 'http://10.3.20.217:3000';
-// let ip = '';
+// let ip = 'http://172.30.1.10:3000';
+let ip = '';
 let room_id;
 let dispatchMakeNewPostIt;
 let dispatchUpdatePostItValue;
@@ -97,6 +101,7 @@ socket.on('postit deletion', function(data) {
 });
 
 socket.on('delete disconnected user', function(disconnectedUserName) {
+  console.log('some user disconnected!!!!!!', disconnectedUserName);
   dispatchUserDisconnection(disconnectedUserName);
 });
 

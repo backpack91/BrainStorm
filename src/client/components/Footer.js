@@ -18,7 +18,7 @@ export default class Footer extends Component{
             <div className='userName'>
               {user}
             </div>
-            <img src={`../../../public/imgs/${index}.png`}></img>
+            <img src={`https://s3.ap-northeast-2.amazonaws.com/brain-storm/user-images/user-image-${index}.png`}></img>
           </div>
         );
       } else {
@@ -27,7 +27,7 @@ export default class Footer extends Component{
             <div className='userName'>
               {user}
             </div>
-            <img src={`../../../public/imgs/${index}.png`}></img>
+            <img src={`https://s3.ap-northeast-2.amazonaws.com/brain-storm/user-images/user-image-${index}.png`}></img>
             <div className='meTag'>나</div>
           </div>
         );
