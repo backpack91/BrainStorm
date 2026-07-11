@@ -98,6 +98,32 @@ const ANGRY_LINES = [
 ];
 const COMBO_BREAK_LINES = ['콤보가 끊겼다!! 아깝다!!', '하치의 리듬이 무너졌다...'];
 const GOLDEN_LINES = ['✨ 황금 재료!! 대박!!', '✨ 사장님 몰래 쓰는 프리미엄 재료!'];
+
+/* ---------- 랜덤 해프닝 이벤트 ---------- */
+const EVT_INFO = {
+  sushi:    { warn: '옆집 스시집 사장이 나타났다!!', active: '🐟 "우리 재료 그만 훔쳐!!" — 피해라!!', dur: 5 },
+  rush:     { warn: '단체 손님 20명 입장!!',         active: '🍱 러시아워!! 점수 2배!!',              dur: 10 },
+  karen:    { warn: '진상 손님의 기운이 느껴진다...', active: null,                                   dur: 2.4 },
+  blackout: { warn: '전기세 미납!! 정전 임박!!',      active: null,                                   dur: 2.2 },
+};
+
+/* ---------- 게임오버 리뷰 (배달앱 패러디) ---------- */
+const TRAP_REVIEWS = {
+  '양말':   { name: '섬세한입맛',     stars: 1, text: '국물에서 섬유유연제 맛이 나요;;' },
+  '빗자루': { name: '식이섬유러버',   stars: 1, text: '식이섬유는 풍부한데 씹히는 게 좀...' },
+  '고추':   { name: '맵찔이인정',     stars: 1, text: '물 세 통 마심. 여기 일식집 맞나요' },
+  '레몬':   { name: '하이볼장인',     stars: 2, text: '돈부리가 아니라 하이볼 안주가 나왔음' },
+  '생선':   { name: '옆집스시집사장', stars: 1, text: '이거 우리 가게 재료인데요? 신고합니다' },
+  '개껌':   { name: '반려견보호자',   stars: 1, text: '우리 개도 안 먹는 걸 파시네요' },
+};
+const ANGRY_REVIEW = { name: '급한직장인', stars: 1, text: '주문하고 퇴근할 뻔;; 배고파서 별 하나 뺌' };
+const FEVER_REVIEW = { name: '목격자',     stars: 5, text: '주방에서 불꽃이 보였어요. 하치가 각성함' };
+const ZERO_REVIEW  = { name: '현실적인손님', stars: 1, text: '한 그릇도 못 받아보고 나옴. 실화냐' };
+const GOOD_REVIEWS = [
+  { min: 5, name: '돈부리성애자', stars: 5, text: '시바견이 만들었는데 사람보다 잘함' },
+  { min: 3, name: '미금동주민',   stars: 5, text: '그릇째 핥을 뻔했습니다. 하치 만세' },
+  { min: 1, name: '첫방문손님',   stars: 4, text: '파가 좀 늦게 나왔지만 인정합니다' },
+];
 const CLEAR_SUBS  = ['손님이 감동했다!!', '리뷰 별 5개 확정!!', '주방장도 놀란 맛!!', '단골 손님 +1'];
 const FINAL_CLEAR_SUB = '하치, 이대로 승진?!';
 const GAMEOVER_LINES = [
@@ -187,6 +213,9 @@ const SFX = {
   clear()   { [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.14, 'triangle', 0.12, i * 0.09)); },
   gameover(){ [440, 349, 262, 196].forEach((f, i) => beep(f, 0.2, 'triangle', 0.12, i * 0.14)); },
   start()   { beep(660, 0.1); beep(880, 0.12, 'triangle', 0.11, 0.08); },
+  warn()    { beep(520, 0.12, 'square', 0.09); beep(700, 0.12, 'square', 0.09, 0.16); beep(520, 0.12, 'square', 0.09, 0.32); },
+  fever()   { [660, 784, 988, 1319].forEach((f, i) => beep(f, 0.12, 'sawtooth', 0.07, i * 0.07)); },
+  karen()   { beep(980, 0.12, 'sine', 0.12); beep(980, 0.12, 'sine', 0.12, 0.18); },
 };
 
 /* ============================================================
@@ -216,11 +245,20 @@ let maxCombo = 0;
 let comboPop = 0;             // 콤보 UI 팝 애니메이션 타이머
 let patience = 1;             // 손님 인내심 (초)
 let patienceMax = 1;
+let curRecipe = MENUS[0].recipe.slice(); // 진행 중 레시피 (진상 손님이 바꿀 수 있어서 사본)
+let evt = null;               // 진행 중 해프닝 이벤트 {type, phase, t, dur}
+let nextEventIn = 999;        // 다음 이벤트까지 남은 시간(초)
+let lastEventType = null;
+let fedTraps = [];            // 손님에게 먹인 함정들 (리뷰 생성용)
+let angryCount = 0;           // 인내심 바닥나서 나간 손님 수
+let reviews = [];             // 게임오버 리뷰
 
 const hachi = { x: W / 2, targetX: W / 2, w: 96, walk: 0 };
 
 function currentMenu()  { return MENUS[menuIdx]; }
-function neededIngId()  { return currentMenu().recipe[stepIdx]; }
+function neededIngId()  { return curRecipe[stepIdx]; }
+function isFever()      { return combo >= CFG.feverCombo; }
+function evtOn(type)    { return evt && evt.type === type && evt.phase === 'on'; }
 function fallSpeed() {
   return Math.min(CFG.maxFallSpeed,
     CFG.baseFallSpeed + menusDone * CFG.speedPerMenu + round * CFG.speedPerRound + playTime * CFG.timeSpeedRamp);
@@ -242,6 +280,10 @@ function resetGame() {
   items = []; particles = []; toasts = []; bowlStack = [];
   serveAnim = null;
   combo = 0; maxCombo = 0; comboPop = 0;
+  curRecipe = MENUS[0].recipe.slice();
+  evt = null; lastEventType = null;
+  nextEventIn = 12 + Math.random() * 8;
+  fedTraps = []; angryCount = 0; reviews = [];
   hachi.x = hachi.targetX = W / 2;
   setPatience();
 }
@@ -300,14 +342,21 @@ function hachiBaseY() { return H - 68; }
 
 function onCatch(item) {
   const br = bowlRect();
-  if (item.kind === 'ing' && item.id === neededIngId()) {
+  // 피버 중에는 순서 무시 — 함정만 아니면 뭐든 정답
+  if (item.kind === 'ing' && (item.id === neededIngId() || isFever())) {
     // 정답!
+    const wasFever = isFever();
     combo += item.golden ? 2 : 1;
     maxCombo = Math.max(maxCombo, combo);
     comboPop = 0.35;
-    const gain = CFG.scorePerCatch * (item.golden ? 3 : 1) * comboMult() + Math.floor(playTime);
+    let gain = CFG.scorePerCatch * (item.golden ? 3 : 1) * comboMult() + Math.floor(playTime);
+    if (evtOn('rush')) gain *= 2;
     score += gain;
     bowlStack.push(ING[item.id].emoji);
+    if (!wasFever && isFever()) {
+      addToast('🔥 하치 각성!! 지금부터 아무 재료나 OK!!', { big: true, dur: 2.2, color: COLOR.orangeDark });
+      SFX.fever();
+    }
     addParticles(item.x, br.y, item.golden ? '#f5c542' : COLOR.orange, item.golden ? 24 : 12);
     if (item.golden) {
       addToast(pick(GOLDEN_LINES) + ' +' + gain, { y: br.y - 48, dur: 1.2, color: '#b8860b' });
@@ -319,12 +368,13 @@ function onCatch(item) {
     }
     SFX.catch(combo);
     stepIdx++;
-    if (stepIdx >= currentMenu().recipe.length) menuComplete();
+    if (stepIdx >= curRecipe.length) menuComplete();
   } else {
     // 오답 or 함정
     if (hitTimer > 0) return;
     lives--; hitTimer = CFG.hitInvincibleMs / 1000; shakeT = 0.5;
     combo = 0;
+    if (item.kind === 'trap') fedTraps.push(item.trap.name);
     const line = item.kind === 'trap' ? pick(item.trap.lines) : pick(WRONG_ORDER_LINES);
     addToast(line, { big: true, dur: 2.0, color: COLOR.red });
     addParticles(item.x, br.y, COLOR.red, 14);
@@ -352,15 +402,74 @@ function menuComplete() {
   menuIdx++;
   if (menuIdx >= MENUS.length) { menuIdx = 0; round++; }
   stepIdx = 0;
+  curRecipe = currentMenu().recipe.slice();
+  evt = null; // 진행 중이던 해프닝은 종료
   setPatience();
 }
 
 function patienceOut() {
   lives--; shakeT = 0.6; combo = 0;
+  angryCount++;
   addToast(pick(ANGRY_LINES), { big: true, dur: 2.0, color: COLOR.red });
   SFX.wrong();
   if (lives <= 0) gameOver();
   else setPatience(); // 다음 손님 입장
+}
+
+/* ---------- 해프닝 이벤트 ---------- */
+function startEvent(forced) {
+  const pool = Object.keys(EVT_INFO).filter(t => t !== lastEventType);
+  const type = forced || pick(pool);
+  lastEventType = type;
+  evt = { type, phase: 'warn', t: 0, dur: EVT_INFO[type].dur };
+  SFX.warn();
+}
+
+function eventGoesActive() {
+  evt.phase = 'on'; evt.t = 0;
+  if (evt.type === 'karen') applyKaren();
+  if (evt.type === 'blackout') addToast('⚡ 아무것도 안 보인다!!', { big: true, dur: 1.4, color: COLOR.navy });
+}
+
+function applyKaren() {
+  // 남은 레시피 중 하나를 다른 재료로 바꿔버린다
+  const i = stepIdx + Math.floor(Math.random() * (curRecipe.length - stepIdx));
+  const old = curRecipe[i];
+  const nu = pick(Object.keys(ING).filter(id => id !== old));
+  curRecipe[i] = nu;
+  patience = Math.min(patienceMax, patience + 2); // 바꿨으니 조금은 기다려준다
+  addToast('😤 손님: 아 잠깐만요, ' + ING[old].name + ' 빼고 ' + ING[nu].name + '(으)로요;;', { big: true, dur: 2.4, color: COLOR.red });
+  SFX.karen();
+}
+
+function spawnFish() {
+  const fish = TRAPS.find(t => t.name === '생선');
+  const r = CFG.itemRadius;
+  items.push({
+    kind: 'trap', trap: fish,
+    x: r + 8 + Math.random() * (W - (r + 8) * 2), y: -r - 10,
+    rot: (Math.random() - 0.5) * 0.5, rotSpd: (Math.random() - 0.5) * 3,
+    spd: fallSpeed() * (1 + Math.random() * 0.3),
+  });
+}
+
+/* ---------- 게임오버 리뷰 생성 ---------- */
+function buildReviews() {
+  const out = [];
+  // 먹인 함정 리뷰가 최우선 (중복 제거, 최대 2개)
+  [...new Set(fedTraps)].slice(0, 2).forEach(name => {
+    if (TRAP_REVIEWS[name]) out.push(TRAP_REVIEWS[name]);
+  });
+  if (angryCount > 0 && out.length < 2) out.push(ANGRY_REVIEW);
+  if (menusDone === 0) {
+    out.push(ZERO_REVIEW);
+  } else if (maxCombo >= CFG.feverCombo) {
+    out.push(FEVER_REVIEW);
+  } else {
+    const good = GOOD_REVIEWS.find(r => menusDone >= r.min);
+    if (good) out.push(good);
+  }
+  return out.slice(0, 3);
 }
 
 function gameOver() {
@@ -368,6 +477,7 @@ function gameOver() {
   overTimer = 0;
   if (score > bestScore) bestScore = score;
   gameOverLine = pick(GAMEOVER_LINES);
+  reviews = buildReviews();
   SFX.gameover();
 }
 let gameOverLine = GAMEOVER_LINES[0];
@@ -440,17 +550,39 @@ function update(dt) {
   if (scene === 'play') {
     playTime += dt;
 
-    // 손님 인내심
-    patience -= dt;
-    if (patience <= 0) patienceOut();
+    // 손님 인내심 (생선 소나기 중에는 손님도 구경하느라 정지)
+    if (!(evt && evt.type === 'sushi')) {
+      patience -= dt;
+      if (patience <= 0) patienceOut();
+    }
+
+    // 해프닝 이벤트 스케줄러
+    if (!evt) {
+      nextEventIn -= dt;
+      if (nextEventIn <= 0) {
+        startEvent();
+        nextEventIn = 16 + Math.random() * 12;
+      }
+    } else {
+      evt.t += dt;
+      if (evt.phase === 'warn' && evt.t >= 1.6) eventGoesActive();
+      else if (evt.phase === 'on' && evt.t >= evt.dur) evt = null;
+    }
 
     spawnTimer -= dt * 1000;
     if (spawnTimer <= 0) {
-      spawnItem();
-      // 진행될수록 동시 낙하 확률 상승 (함정 사이에 정답이 끼는 상황 유도)
-      const extra = Math.min(0.55, 0.18 + menusDone * 0.05 + round * 0.12);
-      if (Math.random() < extra) spawnItem();
-      spawnTimer = spawnInterval() * (0.75 + Math.random() * 0.5);
+      if (evtOn('sushi')) {
+        // 생선 소나기 — 피하는 것만이 살길
+        spawnFish();
+        if (Math.random() < 0.6) spawnFish();
+        spawnTimer = 240 + Math.random() * 120;
+      } else {
+        spawnItem();
+        // 진행될수록 동시 낙하 확률 상승 (함정 사이에 정답이 끼는 상황 유도)
+        const extra = Math.min(0.55, 0.18 + menusDone * 0.05 + round * 0.12);
+        if (evtOn('rush') || Math.random() < extra) spawnItem();
+        spawnTimer = spawnInterval() * (evtOn('rush') ? 0.35 : 1) * (0.75 + Math.random() * 0.5);
+      }
     }
 
     const br = bowlRect();
@@ -724,7 +856,7 @@ function drawItem(it) {
 
 function drawOrderPanel() {
   const menu = currentMenu();
-  const recipe = menu.recipe;
+  const recipe = curRecipe;
   const px = 12, py = 70, pw = W - 24;
   const chipR = 15, gap = 8;
   const ph = 74;
@@ -788,10 +920,12 @@ function drawOrderPanel() {
   const need = ING[neededIngId()];
   ctx.save();
   ctx.font = 'bold 12px sans-serif';
-  const label = '지금 받을 것 ▶ ' + need.emoji + ' ' + need.name;
+  const label = isFever()
+    ? '🔥 FEVER!! 아무 재료나 OK!! (함정 빼고)'
+    : '지금 받을 것 ▶ ' + need.emoji + ' ' + need.name;
   const bw2 = ctx.measureText(label).width + 28;
   const by = py + ph + 8;
-  ctx.fillStyle = COLOR.navy;
+  ctx.fillStyle = isFever() ? COLOR.red : COLOR.navy;
   rr(W / 2 - bw2 / 2, by, bw2, 24, 12); ctx.fill();
   ctx.fillStyle = COLOR.cream;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -851,6 +985,48 @@ function drawCombo() {
     ctx.fillText('🔥 FEVER!', 0, 35);
   }
   ctx.restore();
+}
+
+function drawEventBanner() {
+  if (!evt) return;
+  const E = EVT_INFO[evt.type];
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (evt.phase === 'warn') {
+    const flash = Math.floor(evt.t * 8) % 2 === 0;
+    ctx.font = 'bold 16px sans-serif';
+    const text = '⚠ ' + E.warn;
+    const tw = ctx.measureText(text).width + 40;
+    const by = H * 0.3;
+    ctx.fillStyle = flash ? COLOR.red : COLOR.navy;
+    rr(W / 2 - tw / 2, by - 22, tw, 44, 12); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(text, W / 2, by);
+  } else if (E.active) {
+    ctx.font = 'bold 12px sans-serif';
+    const tw = ctx.measureText(E.active).width + 30;
+    const by = 212;
+    ctx.fillStyle = 'rgba(200,80,60,0.92)';
+    rr(W / 2 - tw / 2, by, tw, 24, 12); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(E.active, W / 2, by + 11);
+    // 남은 시간 바
+    const rem = Math.max(0, 1 - evt.t / evt.dur);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    rr(W / 2 - tw / 2 + 8, by + 19, (tw - 16) * rem, 3, 1.5); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBlackout() {
+  if (!evtOn('blackout')) return;
+  // 하치 주변만 손전등처럼 보인다
+  const cx = hachi.x, cy = hachiBaseY() - 120;
+  const g = ctx.createRadialGradient(cx, cy, 40, cx, cy, 250);
+  g.addColorStop(0, 'rgba(5,8,14,0.2)');
+  g.addColorStop(1, 'rgba(5,8,14,0.94)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
 }
 
 function drawFever() {
@@ -1001,43 +1177,73 @@ function drawTitle() {
 
 function drawGameOver() {
   ctx.save();
-  ctx.fillStyle = 'rgba(30,42,56,0.78)';
+  ctx.fillStyle = 'rgba(30,42,56,0.86)';
   ctx.fillRect(0, 0, W, H);
-
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const cy = H * 0.3;
-  ctx.font = '46px sans-serif';
-  ctx.fillText('🍜', W / 2, cy - 66);
-  ctx.fillStyle = COLOR.cream;
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillText('영업 종료!', W / 2, cy - 14);
-  ctx.fillStyle = 'rgba(245,239,224,0.8)';
-  ctx.font = '13px sans-serif';
-  ctx.fillText(gameOverLine, W / 2, cy + 16);
 
-  // 결과 카드
-  const cardY = cy + 44;
-  ctx.fillStyle = 'rgba(245,239,224,0.96)';
-  rr(46, cardY, W - 92, 148, 14); ctx.fill();
+  const y = Math.max(52, H * 0.07);
+  ctx.font = '30px sans-serif';
+  ctx.fillText('🍜', W / 2, y);
+  ctx.fillStyle = COLOR.cream;
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText('영업 종료!', W / 2, y + 36);
+  ctx.fillStyle = 'rgba(245,239,224,0.75)';
+  ctx.font = '12px sans-serif';
+  ctx.fillText(gameOverLine, W / 2, y + 60);
+
+  // 배달앱 리뷰 패널
+  const px = 24, pw = W - 48;
+  const headH = 58, revH = 54, statH = 62;
+  const ph = headH + reviews.length * revH + statH;
+  const py = y + 80;
+  ctx.fillStyle = 'rgba(245,239,224,0.97)';
+  rr(px, py, pw, ph, 14); ctx.fill();
+
+  // 앱 헤더 + 가게 정보
+  ctx.textAlign = 'left';
+  ctx.fillStyle = COLOR.navy2;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('📱 돈부리의민족 — 리뷰 ' + reviews.length + '개', px + 14, py + 17);
   ctx.fillStyle = COLOR.navy;
   ctx.font = 'bold 15px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('점수', 66, cardY + 28);
-  ctx.fillText('완성한 메뉴', 66, cardY + 58);
-  ctx.fillText('최고 콤보', 66, cardY + 88);
-  ctx.fillText('최고 기록', 66, cardY + 118);
+  ctx.fillText('하치로 서현·미금점', px + 14, py + 39);
+  const avg = reviews.length ? reviews.reduce((s, r) => s + r.stars, 0) / reviews.length : 0;
   ctx.textAlign = 'right';
-  ctx.fillStyle = COLOR.red;
-  ctx.font = 'bold 17px sans-serif';
-  ctx.fillText(score + '점', W - 66, cardY + 28);
-  ctx.fillText(menusDone + '그릇', W - 66, cardY + 58);
-  ctx.fillText(maxCombo + ' 콤보', W - 66, cardY + 88);
+  ctx.fillStyle = COLOR.orange;
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillText('★ ' + avg.toFixed(1), px + pw - 14, py + 39);
+  ctx.strokeStyle = 'rgba(30,42,56,0.12)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(px + 10, py + headH); ctx.lineTo(px + pw - 10, py + headH); ctx.stroke();
+
+  // 리뷰 카드들
+  reviews.forEach((r, i) => {
+    const ry = py + headH + i * revH;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = COLOR.navy;
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(r.name, px + 14, ry + 15);
+    ctx.fillStyle = COLOR.orange;
+    ctx.fillText('★'.repeat(r.stars) + '☆'.repeat(5 - r.stars), px + 14 + ctx.measureText(r.name).width + 10, ry + 15);
+    ctx.fillStyle = COLOR.navy2;
+    ctx.font = '12px sans-serif';
+    ctx.fillText('"' + r.text + '"', px + 14, ry + 36);
+    ctx.strokeStyle = 'rgba(30,42,56,0.08)';
+    ctx.beginPath(); ctx.moveTo(px + 10, ry + revH); ctx.lineTo(px + pw - 10, ry + revH); ctx.stroke();
+  });
+
+  // 오늘 장사 결산
+  const sy = py + headH + reviews.length * revH;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = COLOR.navy;
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillText('오늘 매출 ' + score.toLocaleString() + '원 · ' + menusDone + '그릇 · 최고 ' + maxCombo + '콤보', W / 2, sy + 24);
   ctx.fillStyle = score >= bestScore && score > 0 ? COLOR.red : COLOR.navy2;
-  ctx.fillText(bestScore + '점' + (score >= bestScore && score > 0 ? ' NEW!' : ''), W - 66, cardY + 118);
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('🏆 최고 기록 ' + bestScore.toLocaleString() + '원' + (score >= bestScore && score > 0 ? ' — 신기록!!' : ''), W / 2, sy + 45);
 
   // 다시하기
   if (overTimer > 0.6) {
-    const btnY = cardY + 176;
+    const btnY = py + ph + 20;
     const pulse = 1 + Math.sin(overTimer * 4) * 0.03;
     ctx.save();
     ctx.translate(W / 2, btnY + 24);
@@ -1072,9 +1278,11 @@ function render() {
   drawFever();
   items.forEach(drawItem);
   drawHachi();
+  drawBlackout();
   drawOrderPanel();
   drawHUD();
   drawCombo();
+  drawEventBanner();
   drawParticles();
   drawToasts();
 
