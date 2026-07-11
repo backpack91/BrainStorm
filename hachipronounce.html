@@ -47,8 +47,8 @@
     <div class="sub">
       컨베이어벨트 위 돈부리가 검문 게이트로 갑니다.<br>
       메뉴 이름을 <b>영어 발음</b>으로 정확히 말해야 게이트가 열립니다!<br>
-      📷 카메라를 허용하면 화면 가득 내 얼굴 + <b>얼굴을 따라다니는 필터</b>!<br>
-      (화면을 톡 누르면 필터 변경 · 🎙️ 듣는 동안엔 벨트가 거의 멈춰요)
+      📷 카메라를 허용하면 <b>금발 외국인 필터</b>를 쓴 내가 화면 가득!<br>
+      (화면을 톡 누르면 필터 변경: 금발 → 선글라스 → 영국 신사)
     </div>
     <div id="resultBox" class="hidden">
       <div id="failMsg" style="font-size:14px;margin-bottom:6px;line-height:1.6;"></div>
@@ -162,7 +162,7 @@
 
   // ---------- 카메라 (전체 화면 배경) ----------
   let camVideo=null, camOn=false, camTried=false;
-  const FILTERS=['하치마키 必勝','스시 대장','시바 변신'];
+  const FILTERS=['금발 외국인','금발+선글라스','영국 신사'];
   let filterIdx=0;
   async function ensureCam(){
     if(camOn||camTried) return;
@@ -225,6 +225,7 @@
         w: bb.width*T.dw,
         angle: Math.atan2(eB.y-eA.y,eB.x-eA.x),
         eyes:{x:(eA.x+eB.x)/2,y:(eA.y+eB.y)/2},
+        eyeA:{x:eA.x,y:eA.y}, eyeB:{x:eB.x,y:eB.y},
         nose:lm[2], mouth:lm[3]
       };
       if(!face){ face=t; }
@@ -232,7 +233,7 @@
         const k=0.4;
         face.x+=(t.x-face.x)*k; face.y+=(t.y-face.y)*k; face.w+=(t.w-face.w)*k;
         face.angle+=(t.angle-face.angle)*k;
-        ['eyes','nose','mouth'].forEach(p=>{ face[p].x+=(t[p].x-face[p].x)*k; face[p].y+=(t[p].y-face[p].y)*k; });
+        ['eyes','eyeA','eyeB','nose','mouth'].forEach(p=>{ face[p].x+=(t[p].x-face[p].x)*k; face[p].y+=(t[p].y-face[p].y)*k; });
       }
       faceRaw=null;
     }
@@ -249,101 +250,142 @@
         return;
       }
       // 얼굴 인식 라이브러리가 없을 때 고정 위치 대체
-      f={x:W/2,y:H*0.32,w:Math.min(W,H)*0.45,angle:0,
-         eyes:{x:W/2,y:H*0.28},nose:{x:W/2,y:H*0.34},mouth:{x:W/2,y:H*0.4}};
+      const cw=Math.min(W,H)*0.45;
+      f={x:W/2,y:H*0.32,w:cw,angle:0,
+         eyes:{x:W/2,y:H*0.28},
+         eyeA:{x:W/2-cw*0.21,y:H*0.28}, eyeB:{x:W/2+cw*0.21,y:H*0.28},
+         nose:{x:W/2,y:H*0.34},mouth:{x:W/2,y:H*0.4}};
     }
-    if (filterIdx===0) filterHachimaki(f);
-    else if (filterIdx===1) filterSushi(f);
-    else filterShiba(f);
+    if (filterIdx===0){ blondeWig(f); blondeBrows(f); mustache(f,'#c89b3c',-1); }
+    else if (filterIdx===1){ blondeWig(f); aviators(f); mustache(f,'#b9873a',-1); }
+    else { topHat(f); gentBrows(f); monocle(f); mustache(f,'#4a3623',1); }
   }
-  function filterHachimaki(f){ // 이마에 딱 붙는 必勝 머리띠
-    ctx.save();
-    ctx.translate(f.eyes.x,f.eyes.y-f.w*0.38); ctx.rotate(f.angle);
-    const bw=f.w*1.4, bh=Math.max(14,f.w*0.24);
-    ctx.fillStyle='#fff'; rr(-bw/2,-bh/2,bw,bh,bh*0.3); ctx.fill();
-    ctx.strokeStyle='#cfc8b4'; ctx.lineWidth=2; rr(-bw/2,-bh/2,bw,bh,bh*0.3); ctx.stroke();
-    ctx.fillStyle='#c8503c';
-    ctx.beginPath(); ctx.arc(0,0,bh*0.36,0,7); ctx.fill();
-    ctx.font=`900 ${Math.round(bh*0.66)}px sans-serif`; ctx.textAlign='center';
-    ctx.fillText('必',-bw*0.28,bh*0.24);
-    ctx.fillText('勝',bw*0.28,bh*0.24);
-    // 옆 매듭 + 늘어진 끈
-    ctx.fillStyle='#fff';
-    ctx.beginPath(); ctx.moveTo(bw/2-2,0); ctx.lineTo(bw/2+bh*0.9,-bh*0.7); ctx.lineTo(bw/2+bh*0.6,bh*0.15); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(bw/2-2,0); ctx.lineTo(bw/2+bh*1.1,bh*0.9); ctx.lineTo(bw/2+bh*0.4,bh*0.5); ctx.closePath(); ctx.fill();
+  const HAIR='#e8c14e', HAIR_HI='#f7dc82';
+  function blondeWig(f){ // 얼굴을 확 가려주는 풍성한 금발 가발
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
+    ctx.fillStyle=HAIR;
+    // 뒤통수 볼륨
+    ctx.beginPath(); ctx.ellipse(0,-f.w*0.42,f.w*0.85,f.w*0.65,0,0,7); ctx.fill();
+    // 옆머리: 귀 덮고 턱선 아래까지 흘러내림
+    for(const s of [-1,1]){
+      ctx.beginPath();
+      ctx.moveTo(s*f.w*0.5,-f.w*0.55);
+      ctx.quadraticCurveTo(s*f.w*1.0,-f.w*0.1, s*f.w*0.75,f.w*0.62);
+      ctx.quadraticCurveTo(s*f.w*0.58,f.w*0.75, s*f.w*0.5,f.w*0.55);
+      ctx.quadraticCurveTo(s*f.w*0.55,f.w*0.1, s*f.w*0.42,-f.w*0.2);
+      ctx.closePath(); ctx.fill();
+    }
+    // 앞머리: 이마를 덮는 웨이브 프린지
+    for(let i=-2;i<=2;i++){
+      ctx.beginPath();
+      ctx.ellipse(i*f.w*0.22,-f.w*0.33+Math.abs(i)*f.w*0.025,f.w*0.16,f.w*0.14,i*0.15,0,7);
+      ctx.fill();
+    }
+    // 웨이브 하이라이트
+    ctx.strokeStyle=HAIR_HI; ctx.lineWidth=Math.max(2,f.w*0.04); ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-f.w*0.3,-f.w*0.8); ctx.quadraticCurveTo(-f.w*0.62,-f.w*0.4,-f.w*0.66,f.w*0.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(f.w*0.25,-f.w*0.85); ctx.quadraticCurveTo(f.w*0.6,-f.w*0.45,f.w*0.68,f.w*0.15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-f.w*0.05,-f.w*0.9); ctx.quadraticCurveTo(-f.w*0.1,-f.w*0.6,-f.w*0.06,-f.w*0.42); ctx.stroke();
     ctx.restore();
   }
-  function filterSushi(f){ // 두건 + 코밑에서 축 처지는 콧수염
-    ctx.save();
-    ctx.translate(f.eyes.x,f.eyes.y-f.w*0.34); ctx.rotate(f.angle);
-    ctx.fillStyle='#2b4a8b';
-    ctx.beginPath();
-    ctx.moveTo(-f.w*0.74,0);
-    ctx.quadraticCurveTo(0,-f.w*1.0,f.w*0.74,0);
-    ctx.closePath(); ctx.fill();
-    rr(-f.w*0.74,-f.w*0.09,f.w*1.48,f.w*0.18,f.w*0.05); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font=`900 ${Math.round(f.w*0.34)}px sans-serif`;
-    ctx.textAlign='center'; ctx.fillText('寿',0,-f.w*0.3);
+  function blondeBrows(f){ // 숱 많은 금발 눈썹
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
+    ctx.fillStyle='#d9ae3e';
+    for(const s of [-1,1]){
+      ctx.save(); ctx.translate(s*f.w*0.21,-f.w*0.15); ctx.rotate(s*0.14);
+      rr(-f.w*0.14,-f.w*0.04,f.w*0.28,f.w*0.08,f.w*0.035); ctx.fill();
+      ctx.restore();
+    }
     ctx.restore();
-    // 콧수염: 코 바로 아래 → 입꼬리 옆으로 제대로 축 늘어짐
+  }
+  function gentBrows(f){ // 신사용 짙은 눈썹
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
+    ctx.fillStyle='#4a3623';
+    for(const s of [-1,1]){
+      ctx.save(); ctx.translate(s*f.w*0.21,-f.w*0.15); ctx.rotate(s*-0.1);
+      rr(-f.w*0.13,-f.w*0.035,f.w*0.26,f.w*0.07,f.w*0.03); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function aviators(f){ // 금테 보잉 선글라스 — 눈을 확실히 가려줌
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
+    const lw=Math.max(2,f.w*0.025);
+    for(const s of [-1,1]){
+      const cx=s*f.w*0.22;
+      const g=ctx.createLinearGradient(cx,-f.w*0.15,cx,f.w*0.2);
+      g.addColorStop(0,'rgba(45,55,75,.95)'); g.addColorStop(1,'rgba(95,115,155,.85)');
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(cx-f.w*0.19,-f.w*0.1);
+      ctx.quadraticCurveTo(cx,-f.w*0.18,cx+f.w*0.19,-f.w*0.1);
+      ctx.quadraticCurveTo(cx+f.w*0.17,f.w*0.17,cx,f.w*0.19);
+      ctx.quadraticCurveTo(cx-f.w*0.17,f.w*0.17,cx-f.w*0.19,-f.w*0.1);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#d4af37'; ctx.lineWidth=lw; ctx.stroke();
+      // 반사광
+      ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.lineWidth=lw*1.5;
+      ctx.beginPath(); ctx.moveTo(cx-f.w*0.08,-f.w*0.05); ctx.lineTo(cx+f.w*0.03,f.w*0.11); ctx.stroke();
+    }
+    ctx.strokeStyle='#d4af37'; ctx.lineWidth=lw*1.2;
+    ctx.beginPath(); ctx.moveTo(-f.w*0.05,-f.w*0.1); ctx.quadraticCurveTo(0,-f.w*0.15,f.w*0.05,-f.w*0.1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-f.w*0.41,-f.w*0.1); ctx.lineTo(-f.w*0.62,-f.w*0.15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(f.w*0.41,-f.w*0.1); ctx.lineTo(f.w*0.62,-f.w*0.15); ctx.stroke();
+    ctx.restore();
+  }
+  function topHat(f){ // 영국 신사 실크햇
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y-f.w*0.52); ctx.rotate(f.angle);
+    ctx.fillStyle='#23222a';
+    rr(-f.w*0.68,-f.w*0.06,f.w*1.36,f.w*0.13,f.w*0.05); ctx.fill(); // 챙
+    rr(-f.w*0.43,-f.w*0.8,f.w*0.86,f.w*0.78,f.w*0.06); ctx.fill(); // 몸통
+    ctx.fillStyle='#c8503c'; rr(-f.w*0.43,-f.w*0.24,f.w*0.86,f.w*0.16,f.w*0.03); ctx.fill(); // 밴드
+    ctx.fillStyle='rgba(255,255,255,.12)';
+    rr(-f.w*0.36,-f.w*0.76,f.w*0.1,f.w*0.6,f.w*0.04); ctx.fill(); // 광택
+    ctx.restore();
+  }
+  function monocle(f){ // 외눈안경 + 체인
+    const e=f.eyeB;
+    ctx.save();
+    ctx.fillStyle='rgba(200,220,255,.18)';
+    ctx.beginPath(); ctx.arc(e.x,e.y,f.w*0.17,0,7); ctx.fill();
+    ctx.strokeStyle='#d4af37'; ctx.lineWidth=Math.max(2.5,f.w*0.03);
+    ctx.beginPath(); ctx.arc(e.x,e.y,f.w*0.17,0,7); ctx.stroke();
+    ctx.lineWidth=Math.max(1.5,f.w*0.015);
+    ctx.beginPath(); ctx.moveTo(e.x+f.w*0.05,e.y+f.w*0.16);
+    ctx.quadraticCurveTo(e.x+f.w*0.22,e.y+f.w*0.5,e.x+f.w*0.12,e.y+f.w*0.78);
+    ctx.stroke();
+    ctx.restore();
+  }
+  function mustache(f,color,curl){ // curl>0: 끝이 말려 올라가는 신사 수염 / curl<0: 축 처지는 수염
     const mx=(f.nose.x*0.6+f.mouth.x*0.4), my=(f.nose.y*0.55+f.mouth.y*0.45);
     ctx.save();
     ctx.translate(mx,my); ctx.rotate(f.angle);
-    ctx.strokeStyle='#26211c'; ctx.lineCap='round';
-    ctx.lineWidth=Math.max(3,f.w*0.06);
+    ctx.strokeStyle=color; ctx.lineCap='round';
+    const thick=Math.max(4,f.w*0.07), thin=Math.max(3,f.w*0.042);
     for(const s of [-1,1]){
+      ctx.lineWidth=thick;
       ctx.beginPath();
       ctx.moveTo(s*f.w*0.02,0);
-      ctx.bezierCurveTo(s*f.w*0.2,-f.w*0.05, s*f.w*0.3,f.w*0.05, s*f.w*0.33,f.w*0.26);
-      ctx.stroke();
-      // 끝부분 얇게 한 번 더 늘어뜨림
-      ctx.lineWidth=Math.max(2,f.w*0.035);
-      ctx.beginPath();
-      ctx.moveTo(s*f.w*0.33,f.w*0.26);
-      ctx.quadraticCurveTo(s*f.w*0.34,f.w*0.36, s*f.w*0.28,f.w*0.42);
-      ctx.stroke();
-      ctx.lineWidth=Math.max(3,f.w*0.06);
+      if(curl>0){
+        ctx.bezierCurveTo(s*f.w*0.22,f.w*0.07, s*f.w*0.38,f.w*0.03, s*f.w*0.43,-f.w*0.12);
+        ctx.stroke();
+        ctx.lineWidth=thin;
+        ctx.beginPath();
+        ctx.moveTo(s*f.w*0.43,-f.w*0.12);
+        ctx.quadraticCurveTo(s*f.w*0.41,-f.w*0.21, s*f.w*0.33,-f.w*0.19);
+        ctx.stroke();
+      } else {
+        ctx.bezierCurveTo(s*f.w*0.2,-f.w*0.05, s*f.w*0.3,f.w*0.05, s*f.w*0.34,f.w*0.27);
+        ctx.stroke();
+        ctx.lineWidth=thin;
+        ctx.beginPath();
+        ctx.moveTo(s*f.w*0.34,f.w*0.27);
+        ctx.quadraticCurveTo(s*f.w*0.35,f.w*0.37, s*f.w*0.29,f.w*0.43);
+        ctx.stroke();
+      }
     }
-    ctx.fillStyle='#26211c';
-    ctx.beginPath(); ctx.ellipse(0,-f.w*0.01,f.w*0.1,f.w*0.04,0,0,7); ctx.fill();
-    ctx.restore();
-  }
-  function filterShiba(f){ // 귀 + 코 + 수염 + 볼터치
-    ctx.save();
-    ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
-    for(const s of [-1,1]){
-      ctx.fillStyle='#f0a83c';
-      ctx.beginPath();
-      ctx.moveTo(s*f.w*0.28,-f.w*0.5);
-      ctx.lineTo(s*f.w*0.62,-f.w*1.05);
-      ctx.lineTo(s*f.w*0.72,-f.w*0.42);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle='#fdf4e3';
-      ctx.beginPath();
-      ctx.moveTo(s*f.w*0.38,-f.w*0.55);
-      ctx.lineTo(s*f.w*0.58,-f.w*0.9);
-      ctx.lineTo(s*f.w*0.63,-f.w*0.5);
-      ctx.closePath(); ctx.fill();
-    }
-    ctx.restore();
-    // 코
-    ctx.save();
-    ctx.translate(f.nose.x,f.nose.y); ctx.rotate(f.angle);
-    ctx.fillStyle='#26211c';
-    ctx.beginPath(); ctx.ellipse(0,0,f.w*0.13,f.w*0.09,0,0,7); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,.55)';
-    ctx.beginPath(); ctx.ellipse(-f.w*0.04,-f.w*0.025,f.w*0.035,f.w*0.02,0,0,7); ctx.fill();
-    // 수염
-    ctx.strokeStyle='rgba(38,33,28,.9)'; ctx.lineWidth=Math.max(2,f.w*0.018); ctx.lineCap='round';
-    for(const s of [-1,1]) for(let i=-1;i<=1;i++){
-      ctx.beginPath();
-      ctx.moveTo(s*f.w*0.2,f.w*0.02+i*f.w*0.06);
-      ctx.quadraticCurveTo(s*f.w*0.45,i*f.w*0.09, s*f.w*0.6,f.w*0.03+i*f.w*0.13);
-      ctx.stroke();
-    }
-    // 볼터치
-    ctx.fillStyle='rgba(240,140,110,.45)';
-    for(const s of [-1,1]){ ctx.beginPath(); ctx.ellipse(s*f.w*0.42,f.w*0.1,f.w*0.13,f.w*0.08,0,0,7); ctx.fill(); }
+    ctx.fillStyle=color;
+    ctx.beginPath(); ctx.ellipse(0,-f.w*0.01,f.w*0.11,f.w*0.045,0,0,7); ctx.fill();
     ctx.restore();
   }
 
@@ -456,7 +498,7 @@
       heardEl.textContent='🟢 "'+heard+'" — 통과!';
       S.gateOpen=1; S.mood='happy'; S.moodT=1.2;
       sfxPass();
-      showStamp('合格','#3a9b5c');
+      showStamp('PASS!','#3a9b5c');
       flashColor='rgba(58,155,92,'; flashT=0.22;
       spawnConfetti(W*0.74,H*0.4);
     } else {
@@ -464,7 +506,7 @@
       heardEl.textContent='🔴 "'+heard+'" ...라고 들렸어요';
       S.mood='sass'; S.moodT=1.2;
       sfxFail();
-      showStamp('不合格','#c8503c');
+      showStamp('FAIL!','#c8503c');
       flashColor='rgba(200,80,60,'; flashT=0.32;
       shakeT=0.45;
       S.bowlX=Math.max(-40*scale,S.bowlX-30*scale); // 틀리면 살짝 뒤로 → 재도전 기회
@@ -665,8 +707,7 @@
     S.t+=dt;
     const gx=W*0.74;
     // 그릇 이동 (듣는 동안엔 거의 정지)
-    let spd=(26+S.passed*5)*scale*S.speed;
-    if (listening) spd*=0.15;
+    const spd=(34+S.passed*7)*scale*S.speed;
     if (S.gateOpen>=1){
       S.bowlX+=spd*4*dt; // 통과 가속
       if (S.bowlX>W+60*scale){
