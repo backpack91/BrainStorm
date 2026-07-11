@@ -47,8 +47,8 @@
     <div class="sub">
       컨베이어벨트 위 돈부리가 검문 게이트로 갑니다.<br>
       메뉴 이름을 <b>영어 발음</b>으로 정확히 말해야 게이트가 열립니다!<br>
-      📷 카메라를 허용하면 <b>금발 외국인 필터</b>를 쓴 내가 화면 가득!<br>
-      (화면을 톡 누르면 필터 변경: 금발 → 선글라스 → 영국 신사)
+      📷 카메라를 허용하면 <b>금발 지배인</b>(턱시도+뽀샤시)으로 변신!<br>
+      (화면을 톡 누르면 필터 변경: 지배인 → 선글라스 → 영국 신사)
     </div>
     <div id="resultBox" class="hidden">
       <div id="failMsg" style="font-size:14px;margin-bottom:6px;line-height:1.6;"></div>
@@ -162,7 +162,7 @@
 
   // ---------- 카메라 (전체 화면 배경) ----------
   let camVideo=null, camOn=false, camTried=false;
-  const FILTERS=['금발 외국인','금발+선글라스','영국 신사'];
+  const FILTERS=['금발 지배인','지배인+선글라스','영국 신사'];
   let filterIdx=0;
   async function ensureCam(){
     if(camOn||camTried) return;
@@ -256,46 +256,86 @@
          eyeA:{x:W/2-cw*0.21,y:H*0.28}, eyeB:{x:W/2+cw*0.21,y:H*0.28},
          nose:{x:W/2,y:H*0.34},mouth:{x:W/2,y:H*0.4}};
     }
-    if (filterIdx===0){ blondeWig(f); blondeBrows(f); mustache(f,'#c89b3c',-1); }
-    else if (filterIdx===1){ blondeWig(f); aviators(f); mustache(f,'#b9873a',-1); }
-    else { topHat(f); gentBrows(f); monocle(f); mustache(f,'#4a3623',1); }
+    if (filterIdx===0){ faceGlow(f); managerHair(f); blondeBrows(f); mustache(f,'#c89b3c',-1); tuxedo(f); }
+    else if (filterIdx===1){ faceGlow(f); managerHair(f); aviators(f); mustache(f,'#b9873a',-1); tuxedo(f); }
+    else { faceGlow(f); topHat(f); gentBrows(f); monocle(f); mustache(f,'#4a3623',1); tuxedo(f); }
   }
   const HAIR='#e8c14e', HAIR_HI='#f7dc82';
-  function blondeWig(f){ // 얼굴을 확 가려주는 풍성한 금발 가발
-    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
-    ctx.fillStyle=HAIR;
-    // 뒤통수 볼륨
-    ctx.beginPath(); ctx.ellipse(0,-f.w*0.42,f.w*0.85,f.w*0.65,0,0,7); ctx.fill();
-    // 옆머리: 귀 덮고 턱선 아래까지 흘러내림
-    for(const s of [-1,1]){
-      ctx.beginPath();
-      ctx.moveTo(s*f.w*0.5,-f.w*0.55);
-      ctx.quadraticCurveTo(s*f.w*1.0,-f.w*0.1, s*f.w*0.75,f.w*0.62);
-      ctx.quadraticCurveTo(s*f.w*0.58,f.w*0.75, s*f.w*0.5,f.w*0.55);
-      ctx.quadraticCurveTo(s*f.w*0.55,f.w*0.1, s*f.w*0.42,-f.w*0.2);
-      ctx.closePath(); ctx.fill();
-    }
-    // 앞머리: 이마를 덮는 웨이브 프린지
-    for(let i=-2;i<=2;i++){
-      ctx.beginPath();
-      ctx.ellipse(i*f.w*0.22,-f.w*0.33+Math.abs(i)*f.w*0.025,f.w*0.16,f.w*0.14,i*0.15,0,7);
-      ctx.fill();
-    }
-    // 웨이브 하이라이트
-    ctx.strokeStyle=HAIR_HI; ctx.lineWidth=Math.max(2,f.w*0.04); ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(-f.w*0.3,-f.w*0.8); ctx.quadraticCurveTo(-f.w*0.62,-f.w*0.4,-f.w*0.66,f.w*0.2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(f.w*0.25,-f.w*0.85); ctx.quadraticCurveTo(f.w*0.6,-f.w*0.45,f.w*0.68,f.w*0.15); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-f.w*0.05,-f.w*0.9); ctx.quadraticCurveTo(-f.w*0.1,-f.w*0.6,-f.w*0.06,-f.w*0.42); ctx.stroke();
+  function faceGlow(f){ // 얼굴 뽀샤시 (하얗고 화사하게)
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y+f.w*0.1); ctx.rotate(f.angle);
+    const g=ctx.createRadialGradient(0,0,f.w*0.08,0,0,f.w*0.62);
+    g.addColorStop(0,'rgba(255,250,244,.42)');
+    g.addColorStop(0.7,'rgba(255,250,244,.2)');
+    g.addColorStop(1,'rgba(255,250,244,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.ellipse(0,0,f.w*0.62,f.w*0.76,0,0,7); ctx.fill();
+    // 볼 반짝 하이라이트
+    ctx.fillStyle='rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.ellipse(-f.w*0.3,f.w*0.1,f.w*0.05,f.w*0.028,-0.4,0,7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(f.w*0.32,f.w*0.1,f.w*0.05,f.w*0.028,0.4,0,7); ctx.fill();
     ctx.restore();
   }
-  function blondeBrows(f){ // 숱 많은 금발 눈썹
+  function managerHair(f){ // 단정한 금발 포마드 — 이마 위로만, 눈코입 안 가림
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
+    ctx.fillStyle=HAIR;
+    ctx.beginPath();
+    ctx.moveTo(-f.w*0.62,-f.w*0.3);
+    ctx.quadraticCurveTo(-f.w*0.72,-f.w*0.88, 0,-f.w*0.95);
+    ctx.quadraticCurveTo(f.w*0.72,-f.w*0.88, f.w*0.62,-f.w*0.3);
+    // 이마선 따라 7:3 가르마 웨이브
+    ctx.quadraticCurveTo(f.w*0.42,-f.w*0.44, f.w*0.14,-f.w*0.38);
+    ctx.quadraticCurveTo(-f.w*0.12,-f.w*0.33, -f.w*0.32,-f.w*0.46);
+    ctx.quadraticCurveTo(-f.w*0.5,-f.w*0.52, -f.w*0.62,-f.w*0.3);
+    ctx.closePath(); ctx.fill();
+    // 짧은 옆머리 (귀 옆까지만)
+    for(const s of [-1,1]){
+      ctx.beginPath();
+      ctx.moveTo(s*f.w*0.56,-f.w*0.36);
+      ctx.quadraticCurveTo(s*f.w*0.7,-f.w*0.15, s*f.w*0.58,f.w*0.08);
+      ctx.quadraticCurveTo(s*f.w*0.5,-f.w*0.12, s*f.w*0.5,-f.w*0.3);
+      ctx.closePath(); ctx.fill();
+    }
+    // 포마드 광
+    ctx.strokeStyle=HAIR_HI; ctx.lineWidth=Math.max(2,f.w*0.035); ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-f.w*0.28,-f.w*0.78); ctx.quadraticCurveTo(f.w*0.08,-f.w*0.86,f.w*0.4,-f.w*0.62); ctx.stroke();
+    ctx.restore();
+  }
+  function blondeBrows(f){ // 단정한 금발 눈썹
     ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
     ctx.fillStyle='#d9ae3e';
     for(const s of [-1,1]){
-      ctx.save(); ctx.translate(s*f.w*0.21,-f.w*0.15); ctx.rotate(s*0.14);
-      rr(-f.w*0.14,-f.w*0.04,f.w*0.28,f.w*0.08,f.w*0.035); ctx.fill();
+      ctx.save(); ctx.translate(s*f.w*0.21,-f.w*0.16); ctx.rotate(s*0.12);
+      rr(-f.w*0.12,-f.w*0.03,f.w*0.24,f.w*0.06,f.w*0.025); ctx.fill();
       ctx.restore();
     }
+    ctx.restore();
+  }
+  function tuxedo(f){ // 턱 아래 턱시도: 재킷+흰 셔츠+보타이
+    const chinY=f.mouth.y+f.w*0.42;
+    ctx.save(); ctx.translate(f.eyes.x,chinY); ctx.rotate(f.angle);
+    const w2=f.w*1.55;
+    ctx.fillStyle='#16151c'; // 재킷 어깨
+    ctx.beginPath();
+    ctx.moveTo(-w2,f.w*1.5);
+    ctx.quadraticCurveTo(-w2*0.95,f.w*0.22, -f.w*0.55,f.w*0.04);
+    ctx.lineTo(f.w*0.55,f.w*0.04);
+    ctx.quadraticCurveTo(w2*0.95,f.w*0.22, w2,f.w*1.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fdfcf7'; // 흰 셔츠 V존
+    ctx.beginPath();
+    ctx.moveTo(-f.w*0.4,f.w*0.07);
+    ctx.lineTo(0,f.w*0.9);
+    ctx.lineTo(f.w*0.4,f.w*0.07);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#23222c'; // 라펠
+    ctx.beginPath(); ctx.moveTo(-f.w*0.44,f.w*0.05); ctx.lineTo(-f.w*0.1,f.w*0.55); ctx.lineTo(-f.w*0.4,f.w*0.78); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(f.w*0.44,f.w*0.05); ctx.lineTo(f.w*0.1,f.w*0.55); ctx.lineTo(f.w*0.4,f.w*0.78); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#1a1a22'; // 보타이
+    ctx.beginPath(); ctx.moveTo(0,f.w*0.17); ctx.lineTo(-f.w*0.2,f.w*0.06); ctx.lineTo(-f.w*0.2,f.w*0.3); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0,f.w*0.17); ctx.lineTo(f.w*0.2,f.w*0.06); ctx.lineTo(f.w*0.2,f.w*0.3); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0,f.w*0.18,f.w*0.055,0,7); ctx.fill();
+    ctx.fillStyle='#c9c4b4'; // 셔츠 단추
+    [0.42,0.6,0.78].forEach(y=>{ ctx.beginPath(); ctx.arc(0,f.w*y,f.w*0.02,0,7); ctx.fill(); });
     ctx.restore();
   }
   function gentBrows(f){ // 신사용 짙은 눈썹
@@ -356,36 +396,31 @@
     ctx.stroke();
     ctx.restore();
   }
-  function mustache(f,color,curl){ // curl>0: 끝이 말려 올라가는 신사 수염 / curl<0: 축 처지는 수염
-    const mx=(f.nose.x*0.6+f.mouth.x*0.4), my=(f.nose.y*0.55+f.mouth.y*0.45);
+  function mustache(f,color,curl){ // 작고 단정한 콧수염 (curl>0: 끝 올라감 / curl<0: 살짝 처짐)
+    const mx=(f.nose.x*0.55+f.mouth.x*0.45), my=(f.nose.y*0.52+f.mouth.y*0.48);
     ctx.save();
     ctx.translate(mx,my); ctx.rotate(f.angle);
     ctx.strokeStyle=color; ctx.lineCap='round';
-    const thick=Math.max(4,f.w*0.07), thin=Math.max(3,f.w*0.042);
+    const thick=Math.max(3,f.w*0.045), thin=Math.max(2,f.w*0.028);
     for(const s of [-1,1]){
       ctx.lineWidth=thick;
       ctx.beginPath();
       ctx.moveTo(s*f.w*0.02,0);
       if(curl>0){
-        ctx.bezierCurveTo(s*f.w*0.22,f.w*0.07, s*f.w*0.38,f.w*0.03, s*f.w*0.43,-f.w*0.12);
+        ctx.bezierCurveTo(s*f.w*0.15,f.w*0.04, s*f.w*0.25,f.w*0.02, s*f.w*0.29,-f.w*0.07);
         ctx.stroke();
         ctx.lineWidth=thin;
         ctx.beginPath();
-        ctx.moveTo(s*f.w*0.43,-f.w*0.12);
-        ctx.quadraticCurveTo(s*f.w*0.41,-f.w*0.21, s*f.w*0.33,-f.w*0.19);
+        ctx.moveTo(s*f.w*0.29,-f.w*0.07);
+        ctx.quadraticCurveTo(s*f.w*0.28,-f.w*0.13, s*f.w*0.22,-f.w*0.12);
         ctx.stroke();
       } else {
-        ctx.bezierCurveTo(s*f.w*0.2,-f.w*0.05, s*f.w*0.3,f.w*0.05, s*f.w*0.34,f.w*0.27);
-        ctx.stroke();
-        ctx.lineWidth=thin;
-        ctx.beginPath();
-        ctx.moveTo(s*f.w*0.34,f.w*0.27);
-        ctx.quadraticCurveTo(s*f.w*0.35,f.w*0.37, s*f.w*0.29,f.w*0.43);
+        ctx.bezierCurveTo(s*f.w*0.14,-f.w*0.03, s*f.w*0.21,f.w*0.02, s*f.w*0.25,f.w*0.1);
         ctx.stroke();
       }
     }
     ctx.fillStyle=color;
-    ctx.beginPath(); ctx.ellipse(0,-f.w*0.01,f.w*0.11,f.w*0.045,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,-f.w*0.005,f.w*0.075,f.w*0.032,0,0,7); ctx.fill();
     ctx.restore();
   }
 
