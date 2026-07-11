@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1e2a38">
+<title>하치 주방 캐치 — HACHIRO</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    position: fixed;
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+    background: #1e2a38;
+  }
+  #game {
+    display: block;
+    width: 100%; height: 100%;
+    touch-action: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script>
+'use strict';
+
+/* ============================================================
+ * HACHI KITCHEN CATCH — 하치 주방 캐치
+ * HACHIRO(하치로) 브랜드 미니게임 · 단일 파일 · 외부 의존성 없음
+ * ============================================================ */
+
+/* ---------- 브랜드 컬러 ---------- */
+const COLOR = {
+  orange: '#f0a83c',   // 시바 오렌지
+  navy:   '#1e2a38',   // 노렌 네이비
+  cream:  '#f5efe0',   // 크림
+  red:    '#c8503c',   // 레드
+  navy2:  '#2b3a4d',
+  orangeDark: '#c9822a',
+  white:  '#ffffff',
+};
+
+/* ---------- 재료 데이터 ----------
+ * 새 재료는 여기에 한 줄 추가하면 끝. */
+const ING = {
+  rice:     { name: '밥',       emoji: '🍚' },
+  pork:     { name: '돼지고기', emoji: '🥓' },
+  meat:     { name: '고기',     emoji: '🍖' },
+  katsu:    { name: '돈까스',   emoji: '🍤' },
+  cheese:   { name: '치즈',     emoji: '🧀' },
+  shrimp:   { name: '새우',     emoji: '🦐' },
+  egg:      { name: '온천계란', emoji: '🥚' },
+  onion:    { name: '양파',     emoji: '🧅' },
+  scallion: { name: '파',       emoji: '🥬' },
+  parsley:  { name: '파슬리',   emoji: '🌿' },
+};
+
+/* ---------- 메뉴 데이터 (레시피 = 스테이지) ----------
+ * 메뉴 추가는 이 배열에 객체 하나 추가로 끝. */
+const MENUS = [
+  { name: '부타동',            recipe: ['rice', 'pork', 'onion', 'scallion'] },
+  { name: '치즈카츠동',        recipe: ['rice', 'katsu', 'cheese', 'parsley'] },
+  { name: '온센타마동',        recipe: ['rice', 'meat', 'egg', 'scallion'] },
+  { name: '에비동',            recipe: ['rice', 'shrimp', 'egg', 'onion'] },
+  { name: '스페셜 모리모리동', recipe: ['rice', 'meat', 'katsu', 'cheese', 'egg', 'parsley'], final: true },
+];
+
+/* ---------- 함정 아이템 ---------- */
+const TRAPS = [
+  { emoji: '🧦', name: '양말',   lines: ['양말 돈부리...?! 손님이 기절했다 😵', '이건 세탁기로 가야지, 하치야!'] },
+  { emoji: '🧹', name: '빗자루', lines: ['청소는 마감하고 해!!', '빗자루동... 식감 최악이다 멍...'] },
+  { emoji: '🌶️', name: '고추',   lines: ['우린 맵찔이 돈부리집이야!! 🔥', '손님: 저기요, 물 좀... 물!!!'] },
+  { emoji: '🍋', name: '레몬',   lines: ['레몬은 하이볼에나 넣어...', '시큼한 돈부리?! 손님이 도망갔다'] },
+  { emoji: '🐟', name: '생선',   lines: ['그건 옆집 스시집 재료야!', '여긴 돈부리집이라고!! 멍!!'] },
+  { emoji: '🦴', name: '개껌',   lines: ['그건 네 간식이잖아!! 참아!!', '하치야... 근무 중 간식 금지야'] },
+];
+
+/* ---------- 멘트 ---------- */
+const WRONG_ORDER_LINES = [
+  '순서!! 주문서를 보라고!! 📋',
+  '손님: 시킨 거랑 다른데요...?',
+  '사장님이 CCTV로 보고 계신다...',
+  '하치야 정신차려!! 멍!!',
+  '레시피는 장식이 아니야!!',
+];
+const CATCH_LINES = ['냠!', '멍!', '좋았어!', '완벽해!', '오케이!'];
+const MISS_LINES  = ['앗, 놓쳤다 멍...', '재료가 아깝다...!'];
+const CLEAR_SUBS  = ['손님이 감동했다!!', '리뷰 별 5개 확정!!', '주방장도 놀란 맛!!', '단골 손님 +1'];
+const FINAL_CLEAR_SUB = '하치, 이대로 승진?!';
+const GAMEOVER_LINES = [
+  '오늘 알바는 여기까지...',
+  '하치는 조용히 앞치마를 벗었다',
+  '사장님: 내일은 잘할 수 있지?',
+];
+
+/* ---------- 게임 설정 ---------- */
+const CFG = {
+  logicalW: 400,            // 논리 좌표 너비 (세로모드 기준)
+  maxLives: 3,
+  baseFallSpeed: 150,       // px/s
+  speedPerMenu: 24,         // 메뉴 하나 완성마다 가산
+  speedPerRound: 40,        // 전체 메뉴 한 바퀴마다 가산
+  timeSpeedRamp: 1.2,       // 초당 가속
+  maxFallSpeed: 460,
+  baseSpawnMs: 950,
+  minSpawnMs: 470,
+  scorePerCatch: 100,
+  scorePerMenu: 500,
+  hitInvincibleMs: 900,
+  needChance: 0.45,         // 필요 재료 스폰 확률
+  trapChance: 0.38,         // (필요 재료가 아닐 때) 함정 확률
+  itemRadius: 26,
+};
+
+/* ============================================================
+ * 캔버스 셋업
+ * ============================================================ */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W = CFG.logicalW, H = 700, SCALE = 1;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const vw = window.innerWidth, vh = window.innerHeight;
+  SCALE = vw / CFG.logicalW;
+  W = CFG.logicalW;
+  H = vh / SCALE;
+  canvas.width = vw * dpr;
+  canvas.height = vh * dpr;
+  canvas.style.width = vw + 'px';
+  canvas.style.height = vh + 'px';
+  ctx.setTransform(dpr * SCALE, 0, 0, dpr * SCALE, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* 스크롤/당겨서 새로고침 차단 */
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ============================================================
+ * 사운드 (WebAudio, 외부 파일 없음)
+ * ============================================================ */
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { /* 무음 진행 */ }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function beep(freq, dur, type, vol, delay) {
+  if (!audioCtx) return;
+  const t0 = audioCtx.currentTime + (delay || 0);
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type || 'triangle';
+  osc.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(vol || 0.12, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  osc.connect(g).connect(audioCtx.destination);
+  osc.start(t0); osc.stop(t0 + dur);
+}
+const SFX = {
+  catch()   { beep(880, 0.09); beep(1320, 0.08, 'triangle', 0.09, 0.05); },
+  wrong()   { beep(170, 0.25, 'sawtooth', 0.14); beep(120, 0.3, 'sawtooth', 0.12, 0.08); },
+  clear()   { [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.14, 'triangle', 0.12, i * 0.09)); },
+  gameover(){ [440, 349, 262, 196].forEach((f, i) => beep(f, 0.2, 'triangle', 0.12, i * 0.14)); },
+  start()   { beep(660, 0.1); beep(880, 0.12, 'triangle', 0.11, 0.08); },
+};
+
+/* ============================================================
+ * 게임 상태
+ * ============================================================ */
+let scene = 'title';          // title | play | clear | over
+let bestScore = 0;            // 인메모리 최고 기록
+let score = 0;
+let lives = CFG.maxLives;
+let menusDone = 0;            // 완성한 메뉴 수
+let round = 0;                // 전체 메뉴 한 바퀴 = 1 라운드
+let menuIdx = 0;
+let stepIdx = 0;              // 현재 레시피에서 받아야 할 재료 인덱스
+let playTime = 0;
+let spawnTimer = 0;
+let hitTimer = 0;             // 무적 시간
+let shakeT = 0;
+let clearTimer = 0;
+let clearInfo = null;
+let items = [];               // 낙하 아이템
+let particles = [];
+let toasts = [];
+let bowlStack = [];           // 그릇에 쌓인 재료 (emoji)
+let serveAnim = null;         // 메뉴 완성 연출용
+
+const hachi = { x: W / 2, targetX: W / 2, w: 96, walk: 0 };
+
+function currentMenu()  { return MENUS[menuIdx]; }
+function neededIngId()  { return currentMenu().recipe[stepIdx]; }
+function fallSpeed() {
+  return Math.min(CFG.maxFallSpeed,
+    CFG.baseFallSpeed + menusDone * CFG.speedPerMenu + round * CFG.speedPerRound + playTime * CFG.timeSpeedRamp);
+}
+function spawnInterval() {
+  return Math.max(CFG.minSpawnMs, CFG.baseSpawnMs - menusDone * 40 - round * 60);
+}
+
+function resetGame() {
+  score = 0; lives = CFG.maxLives;
+  menusDone = 0; round = 0; menuIdx = 0; stepIdx = 0;
+  playTime = 0; spawnTimer = 0; hitTimer = 0; shakeT = 0;
+  items = []; particles = []; toasts = []; bowlStack = [];
+  serveAnim = null;
+  hachi.x = hachi.targetX = W / 2;
+}
+
+/* ============================================================
+ * 스폰 로직
+ * ============================================================ */
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function spawnItem() {
+  const need = neededIngId();
+  const needOnScreen = items.some(it => it.kind === 'ing' && it.id === need);
+  let item;
+  if ((!needOnScreen && Math.random() < 0.8) || Math.random() < CFG.needChance) {
+    item = { kind: 'ing', id: need };
+  } else if (Math.random() < CFG.trapChance) {
+    const trap = pick(TRAPS);
+    item = { kind: 'trap', trap };
+  } else {
+    // 오답용 재료: 전체 재료 중 현재 필요 재료가 아닌 것
+    const pool = Object.keys(ING).filter(id => id !== need);
+    item = { kind: 'ing', id: pick(pool) };
+  }
+  const r = CFG.itemRadius;
+  item.x = r + 8 + Math.random() * (W - (r + 8) * 2);
+  item.y = -r - 10;
+  item.rot = (Math.random() - 0.5) * 0.5;
+  item.rotSpd = (Math.random() - 0.5) * 2;
+  item.spd = fallSpeed() * (0.9 + Math.random() * 0.25);
+  items.push(item);
+}
+
+/* ============================================================
+ * 이펙트
+ * ============================================================ */
+function addToast(text, opts) {
+  toasts.push(Object.assign({ text, t: 0, dur: 1.6, big: false, x: W / 2, y: H * 0.42, color: COLOR.navy }, opts));
+}
+function addParticles(x, y, color, n) {
+  for (let i = 0; i < (n || 10); i++) {
+    const a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 130;
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, t: 0, dur: 0.5 + Math.random() * 0.3, color, r: 2 + Math.random() * 3 });
+  }
+}
+
+/* ============================================================
+ * 판정
+ * ============================================================ */
+function bowlRect() {
+  // 하치 머리 위 그릇의 캐치 영역
+  const bw = 92, bh = 46;
+  return { x: hachi.x - bw / 2, y: hachiBaseY() - 196, w: bw, h: bh };
+}
+function hachiBaseY() { return H - 68; }
+
+function onCatch(item) {
+  const br = bowlRect();
+  if (item.kind === 'ing' && item.id === neededIngId()) {
+    // 정답!
+    score += CFG.scorePerCatch + Math.floor(playTime); // 살짝 시간 보너스
+    bowlStack.push(ING[item.id].emoji);
+    addParticles(item.x, br.y, COLOR.orange, 12);
+    addToast(pick(CATCH_LINES), { y: br.y - 30, dur: 0.7, color: COLOR.orangeDark });
+    SFX.catch();
+    stepIdx++;
+    if (stepIdx >= currentMenu().recipe.length) menuComplete();
+  } else {
+    // 오답 or 함정
+    if (hitTimer > 0) return;
+    lives--; hitTimer = CFG.hitInvincibleMs / 1000; shakeT = 0.5;
+    const line = item.kind === 'trap' ? pick(item.trap.lines) : pick(WRONG_ORDER_LINES);
+    addToast(line, { big: true, dur: 2.0, color: COLOR.red });
+    addParticles(item.x, br.y, COLOR.red, 14);
+    SFX.wrong();
+    if (lives <= 0) gameOver();
+  }
+}
+
+function menuComplete() {
+  const menu = currentMenu();
+  const bonus = Math.floor(CFG.scorePerMenu * (1 + round * 0.5));
+  score += bonus;
+  menusDone++;
+  clearInfo = { name: menu.name, final: !!menu.final, bonus, sub: menu.final ? FINAL_CLEAR_SUB : pick(CLEAR_SUBS) };
+  serveAnim = { t: 0, x: hachi.x, y: hachiBaseY() - 196, stack: bowlStack.slice() };
+  bowlStack = [];
+  items = [];
+  toasts = [];
+  scene = 'clear';
+  clearTimer = 0;
+  SFX.clear();
+  // 다음 메뉴 준비
+  menuIdx++;
+  if (menuIdx >= MENUS.length) { menuIdx = 0; round++; }
+  stepIdx = 0;
+}
+
+function gameOver() {
+  scene = 'over';
+  overTimer = 0;
+  if (score > bestScore) bestScore = score;
+  gameOverLine = pick(GAMEOVER_LINES);
+  SFX.gameover();
+}
+let gameOverLine = GAMEOVER_LINES[0];
+
+/* ============================================================
+ * 입력 (드래그 + 키보드)
+ * ============================================================ */
+let dragging = false, lastPX = 0;
+const keys = {};
+
+function toLogicalX(clientX) { return clientX / SCALE; }
+
+canvas.addEventListener('pointerdown', e => {
+  initAudio();
+  const lx = toLogicalX(e.clientX), ly = e.clientY / SCALE;
+  if (scene === 'title') { startGame(); return; }
+  if (scene === 'over') {
+    if (overTimer > 0.6) startGame();
+    return;
+  }
+  if (scene === 'play' || scene === 'clear') {
+    dragging = true; lastPX = lx;
+    canvas.setPointerCapture(e.pointerId);
+  }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const lx = toLogicalX(e.clientX);
+  hachi.targetX += (lx - lastPX) * 1.25;  // 원핸드 드래그 감도
+  lastPX = lx;
+});
+canvas.addEventListener('pointerup',   () => dragging = false);
+canvas.addEventListener('pointercancel', () => dragging = false);
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if ((scene === 'title' || scene === 'over') && (e.key === ' ' || e.key === 'Enter')) { initAudio(); startGame(); }
+});
+window.addEventListener('keyup', e => keys[e.key] = false);
+
+function startGame() {
+  resetGame();
+  scene = 'play';
+  SFX.start();
+  addToast('주문 들어왔습니다~!', { dur: 1.4, color: COLOR.navy });
+}
+
+/* ============================================================
+ * 업데이트
+ * ============================================================ */
+let overTimer = 0;
+
+function update(dt) {
+  // 하치 이동 (모든 씬 공통 스무딩)
+  if (keys.ArrowLeft)  hachi.targetX -= 320 * dt;
+  if (keys.ArrowRight) hachi.targetX += 320 * dt;
+  hachi.targetX = Math.max(hachi.w / 2, Math.min(W - hachi.w / 2, hachi.targetX));
+  const prevX = hachi.x;
+  hachi.x += (hachi.targetX - hachi.x) * Math.min(1, dt * 14);
+  hachi.walk += Math.abs(hachi.x - prevX) * 0.08;
+
+  // 파티클/토스트는 항상
+  particles.forEach(p => { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 380 * dt; });
+  particles = particles.filter(p => p.t < p.dur);
+  toasts.forEach(t => t.t += dt);
+  toasts = toasts.filter(t => t.t < t.dur);
+  if (shakeT > 0) shakeT -= dt;
+  if (hitTimer > 0) hitTimer -= dt;
+
+  if (scene === 'play') {
+    playTime += dt;
+    spawnTimer -= dt * 1000;
+    if (spawnTimer <= 0) { spawnItem(); spawnTimer = spawnInterval() * (0.75 + Math.random() * 0.5); }
+
+    const br = bowlRect();
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      it.y += it.spd * dt;
+      it.rot += it.rotSpd * dt;
+      // 캐치 판정: 그릇 영역
+      if (it.y + CFG.itemRadius * 0.4 > br.y && it.y < br.y + br.h &&
+          it.x > br.x - 6 && it.x < br.x + br.w + 6) {
+        items.splice(i, 1);
+        onCatch(it);
+        // 메뉴 완성/게임오버로 씬이 바뀌면 items가 비워지므로 즉시 중단
+        if (scene !== 'play') break;
+        continue;
+      }
+      // 바닥으로 사라짐
+      if (it.y > H + CFG.itemRadius) {
+        if (it.kind === 'ing' && it.id === neededIngId() && Math.random() < 0.5) {
+          addToast(pick(MISS_LINES), { dur: 0.9, y: H * 0.6, color: COLOR.navy2 });
+        }
+        items.splice(i, 1);
+      }
+    }
+  } else if (scene === 'clear') {
+    clearTimer += dt;
+    if (serveAnim) serveAnim.t += dt;
+    if (clearTimer > 1.9) { scene = 'play'; serveAnim = null; spawnTimer = 400; }
+  } else if (scene === 'over') {
+    overTimer += dt;
+  } else if (scene === 'title') {
+    playTime += dt; // 타이틀 애니메이션용
+  }
+}
+
+/* ============================================================
+ * 렌더링
+ * ============================================================ */
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawBackground() {
+  // 주방 벽
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#f7f1e3');
+  g.addColorStop(1, '#efe5cf');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // 노렌 (상단 커튼)
+  ctx.fillStyle = COLOR.navy;
+  ctx.fillRect(0, 0, W, 24);
+  for (let i = 0; i < 5; i++) {
+    const nx = i * (W / 5);
+    ctx.fillRect(nx + 4, 24, W / 5 - 8, 16);
+  }
+  ctx.fillStyle = COLOR.cream;
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('HACHIRO', W / 2, 13);
+  ctx.textBaseline = 'alphabetic';
+
+  // 벽 타일 라인
+  ctx.strokeStyle = 'rgba(30,42,56,0.06)';
+  ctx.lineWidth = 1;
+  for (let y = 90; y < H - 100; y += 46) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // 조리대 (바닥)
+  const cy = H - 46;
+  ctx.fillStyle = '#d8c9a8';
+  ctx.fillRect(0, cy, W, H - cy);
+  ctx.fillStyle = '#c4b28c';
+  ctx.fillRect(0, cy, W, 6);
+}
+
+function drawHachi() {
+  const x = hachi.x, baseY = hachiBaseY();
+  const bob = Math.sin(hachi.walk) * 2;
+  const lean = (hachi.targetX - hachi.x) * 0.02;
+  const blink = (Math.sin(playTime * 1.7) > 0.96);
+  const hurt = hitTimer > 0 && Math.floor(hitTimer * 12) % 2 === 0;
+
+  ctx.save();
+  ctx.translate(x, baseY + bob);
+  ctx.rotate(lean * 0.15);
+  if (hurt) ctx.globalAlpha = 0.45;
+
+  // 그림자
+  ctx.fillStyle = 'rgba(30,42,56,0.15)';
+  ctx.beginPath(); ctx.ellipse(0, 4, 44, 9, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 다리
+  ctx.fillStyle = COLOR.orange;
+  const step = Math.sin(hachi.walk * 2) * 4;
+  rr(-24, -26 + step * 0.4, 16, 26 - step * 0.4, 7); ctx.fill();
+  rr(8,  -26 - step * 0.4, 16, 26 + step * 0.4, 7); ctx.fill();
+
+  // 몸통
+  ctx.fillStyle = COLOR.orange;
+  rr(-30, -78, 60, 58, 18); ctx.fill();
+  // 배 (크림)
+  ctx.fillStyle = COLOR.cream;
+  rr(-18, -66, 36, 42, 14); ctx.fill();
+
+  // 앞치마 (네이비)
+  ctx.fillStyle = COLOR.navy;
+  rr(-22, -58, 44, 34, 8); ctx.fill();
+  ctx.fillStyle = COLOR.orange;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('八', 0, -37);
+  ctx.strokeStyle = COLOR.navy;
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-22, -55); ctx.lineTo(-30, -62); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(22, -55); ctx.lineTo(30, -62); ctx.stroke();
+
+  // 팔 (위로 뻗어 그릇 받침)
+  ctx.strokeStyle = COLOR.orange;
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-26, -64); ctx.lineTo(-40, -136); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(26, -64); ctx.lineTo(40, -136); ctx.stroke();
+  // 손 (크림)
+  ctx.fillStyle = COLOR.cream;
+  ctx.beginPath(); ctx.arc(-40, -138, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(40, -138, 7, 0, Math.PI * 2); ctx.fill();
+
+  // 꼬리 (말린 꼬리)
+  ctx.strokeStyle = COLOR.orange;
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.arc(34, -74, 10, Math.PI * 0.9, Math.PI * 2.1);
+  ctx.stroke();
+
+  // 머리
+  ctx.fillStyle = COLOR.orange;
+  ctx.beginPath(); ctx.ellipse(0, -104, 34, 30, 0, 0, Math.PI * 2); ctx.fill();
+  // 귀
+  ctx.beginPath(); ctx.moveTo(-30, -118); ctx.lineTo(-24, -142); ctx.lineTo(-8, -126); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(30, -118); ctx.lineTo(24, -142); ctx.lineTo(8, -126); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = COLOR.cream;
+  ctx.beginPath(); ctx.moveTo(-25, -122); ctx.lineTo(-22, -134); ctx.lineTo(-13, -124); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(25, -122); ctx.lineTo(22, -134); ctx.lineTo(13, -124); ctx.closePath(); ctx.fill();
+
+  // 주둥이 (크림)
+  ctx.fillStyle = COLOR.cream;
+  ctx.beginPath(); ctx.ellipse(0, -96, 18, 14, 0, 0, Math.PI * 2); ctx.fill();
+  // 눈썹 자리 크림
+  ctx.beginPath(); ctx.ellipse(-13, -112, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(13, -112, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 눈
+  ctx.fillStyle = COLOR.navy;
+  if (hurt) {
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText('>', -13, -102);
+    ctx.fillText('<', 13, -102);
+  } else if (blink) {
+    ctx.lineWidth = 2; ctx.strokeStyle = COLOR.navy;
+    ctx.beginPath(); ctx.moveTo(-17, -106); ctx.lineTo(-9, -106); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(9, -106); ctx.lineTo(17, -106); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(-13, -106, 3.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(13, -106, 3.4, 0, Math.PI * 2); ctx.fill();
+  }
+  // 코 + 입
+  ctx.fillStyle = COLOR.navy;
+  ctx.beginPath(); ctx.arc(0, -96, 3.2, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = COLOR.navy; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(0, -93); ctx.quadraticCurveTo(-4, -88, -8, -91); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -93); ctx.quadraticCurveTo(4, -88, 8, -91); ctx.stroke();
+  // 볼터치
+  ctx.fillStyle = 'rgba(200,80,60,0.35)';
+  ctx.beginPath(); ctx.ellipse(-22, -96, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(22, -96, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 머리띠 (하치마키)
+  ctx.fillStyle = COLOR.red;
+  rr(-30, -126, 60, 9, 4); ctx.fill();
+
+  ctx.restore();
+
+  // 그릇 (머리 위)
+  drawBowl(x, baseY - 196 + bob, bowlStack);
+}
+
+function drawBowl(cx, topY, stack) {
+  // 캐치 영역 상단이 topY
+  const bw = 92, bh = 40;
+  ctx.save();
+  ctx.translate(cx, topY + bh);
+
+  // 그릇 본체
+  ctx.fillStyle = COLOR.white;
+  ctx.beginPath();
+  ctx.moveTo(-bw / 2, -14);
+  ctx.quadraticCurveTo(-bw / 2 + 6, 16, -bw / 4, 20);
+  ctx.lineTo(bw / 4, 20);
+  ctx.quadraticCurveTo(bw / 2 - 6, 16, bw / 2, -14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = COLOR.navy; ctx.lineWidth = 2.5; ctx.stroke();
+  // 무늬 라인
+  ctx.strokeStyle = COLOR.red; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-bw / 2 + 4, -4); ctx.lineTo(bw / 2 - 4, -4); ctx.stroke();
+
+  // 쌓인 재료
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const show = stack.slice(-6);
+  show.forEach((em, i) => {
+    const ox = ((i % 3) - 1) * 20;
+    const oy = -14 - Math.floor(i / 3) * 14;
+    ctx.font = '20px sans-serif';
+    ctx.fillText(em, ox, oy);
+  });
+
+  // 그릇 테두리(입구) — 재료 위에 살짝 겹치게
+  ctx.fillStyle = COLOR.white;
+  ctx.strokeStyle = COLOR.navy; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.ellipse(0, -14, bw / 2, 8, 0, 0, Math.PI); ctx.stroke();
+  ctx.restore();
+}
+
+function drawItem(it) {
+  ctx.save();
+  ctx.translate(it.x, it.y);
+  ctx.rotate(it.rot * 0.3);
+  const r = CFG.itemRadius;
+  const isTrap = it.kind === 'trap';
+
+  // 접시 원판
+  ctx.fillStyle = isTrap ? 'rgba(200,80,60,0.12)' : 'rgba(255,255,255,0.92)';
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = isTrap ? COLOR.red : COLOR.orange;
+  if (isTrap) ctx.setLineDash([5, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '26px sans-serif';
+  ctx.fillText(isTrap ? it.trap.emoji : ING[it.id].emoji, 0, -1);
+
+  // 라벨 (메뉴 학습 포인트)
+  ctx.rotate(-it.rot * 0.3);
+  ctx.font = 'bold 10px sans-serif';
+  ctx.fillStyle = isTrap ? COLOR.red : COLOR.navy;
+  const label = isTrap ? it.trap.name : ING[it.id].name;
+  ctx.fillText(label, 0, r + 9);
+  ctx.restore();
+}
+
+function drawOrderPanel() {
+  const menu = currentMenu();
+  const recipe = menu.recipe;
+  const px = 12, py = 70, pw = W - 24;
+  const chipR = 15, gap = 8;
+  const ph = 74;
+
+  // 주문서 종이
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.94)';
+  rr(px, py, pw, ph, 10); ctx.fill();
+  ctx.strokeStyle = 'rgba(30,42,56,0.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+  // 집게
+  ctx.fillStyle = COLOR.red;
+  rr(W / 2 - 16, py - 5, 32, 10, 4); ctx.fill();
+
+  // 메뉴명
+  ctx.fillStyle = COLOR.navy;
+  ctx.font = 'bold 15px sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('📋 ' + menu.name, px + 12, py + 22);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = COLOR.navy2;
+  ctx.textAlign = 'right';
+  ctx.fillText((round > 0 ? round + 1 + '바퀴째 · ' : '') + '메뉴 ' + (menuIdx + 1) + '/' + MENUS.length, px + pw - 12, py + 22);
+
+  // 재료 순서 칩
+  const totalW = recipe.length * chipR * 2 + (recipe.length - 1) * gap;
+  let cx = W / 2 - totalW / 2 + chipR;
+  const cy = py + 46;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  recipe.forEach((id, i) => {
+    const done = i < stepIdx, cur = i === stepIdx;
+    // 화살표
+    if (i > 0) {
+      ctx.fillStyle = 'rgba(30,42,56,0.35)';
+      ctx.font = '10px sans-serif';
+      ctx.fillText('▶', cx - chipR - gap / 2, cy);
+    }
+    // 칩 배경
+    ctx.beginPath(); ctx.arc(cx, cy, chipR, 0, Math.PI * 2);
+    ctx.fillStyle = done ? 'rgba(140,190,120,0.3)' : cur ? 'rgba(240,168,60,0.28)' : 'rgba(30,42,56,0.06)';
+    ctx.fill();
+    if (cur) {
+      const pulse = 2 + Math.sin(playTime * 6) * 1.5;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = COLOR.orange;
+      ctx.beginPath(); ctx.arc(cx, cy, chipR + pulse, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = done ? 0.5 : 1;
+    ctx.font = '17px sans-serif';
+    ctx.fillText(ING[id].emoji, cx, cy);
+    ctx.globalAlpha = 1;
+    if (done) {
+      ctx.fillStyle = '#4a8a3c';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('✓', cx + chipR - 5, cy - chipR + 6);
+    }
+    cx += chipR * 2 + gap;
+  });
+  ctx.restore();
+
+  // "지금 받을 재료" 안내
+  const need = ING[neededIngId()];
+  ctx.save();
+  ctx.font = 'bold 12px sans-serif';
+  const label = '지금 받을 것 ▶ ' + need.emoji + ' ' + need.name;
+  const bw2 = ctx.measureText(label).width + 28;
+  const by = py + ph + 8;
+  ctx.fillStyle = COLOR.navy;
+  rr(W / 2 - bw2 / 2, by, bw2, 24, 12); ctx.fill();
+  ctx.fillStyle = COLOR.cream;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, W / 2, by + 12 + Math.sin(playTime * 6) * 0.8);
+  ctx.restore();
+}
+
+function drawHUD() {
+  ctx.save();
+  // 점수
+  ctx.fillStyle = COLOR.navy;
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('점수 ' + score, 12, 56);
+  // 하트
+  ctx.textAlign = 'right';
+  ctx.font = '15px sans-serif';
+  let hearts = '';
+  for (let i = 0; i < CFG.maxLives; i++) hearts = (i < lives ? '❤️' : '🖤') + hearts;
+  ctx.fillText(hearts, W - 12, 56);
+  ctx.restore();
+}
+
+function drawToasts() {
+  toasts.forEach(t => {
+    const p = t.t / t.dur;
+    const alpha = p < 0.15 ? p / 0.15 : p > 0.75 ? (1 - p) / 0.25 : 1;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (t.big) {
+      // 말풍선 스타일 실패 멘트
+      ctx.font = 'bold 15px sans-serif';
+      const tw = ctx.measureText(t.text).width;
+      const bx = W / 2 - tw / 2 - 14, by = t.y - 20, bw = tw + 28, bh = 40;
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      rr(bx, by, bw, bh, 12); ctx.fill();
+      ctx.strokeStyle = t.color; ctx.lineWidth = 2.5;
+      rr(bx, by, bw, bh, 12); ctx.stroke();
+      ctx.fillStyle = t.color;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(t.text, W / 2, t.y);
+    } else {
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillStyle = t.color;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(t.text, t.x, t.y - p * 24);
+    }
+    ctx.restore();
+  });
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = 1 - p.t / p.dur;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawClearOverlay() {
+  const p = Math.min(1, clearTimer / 0.35);
+  ctx.save();
+  ctx.fillStyle = 'rgba(30,42,56,' + 0.55 * p + ')';
+  ctx.fillRect(0, 0, W, H);
+
+  // 완성된 그릇이 위로 서빙되는 연출
+  if (serveAnim) {
+    const sy = serveAnim.y - serveAnim.t * 120;
+    drawBowl(serveAnim.x, sy, serveAnim.stack);
+  }
+
+  const cy = H * 0.4;
+  ctx.globalAlpha = p;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = (clearInfo.final ? 40 : 44) + 'px sans-serif';
+  ctx.fillText('🎉', W / 2, cy - 64);
+  ctx.fillStyle = COLOR.cream;
+  ctx.font = 'bold ' + (clearInfo.final ? 24 : 28) + 'px sans-serif';
+  ctx.fillText(clearInfo.name + ' 완성!', W / 2, cy);
+  ctx.fillStyle = COLOR.orange;
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillText(clearInfo.sub, W / 2, cy + 34);
+  ctx.fillStyle = 'rgba(245,239,224,0.75)';
+  ctx.font = '13px sans-serif';
+  ctx.fillText('+' + clearInfo.bonus + '점 · 속도가 빨라진다!', W / 2, cy + 60);
+  ctx.restore();
+}
+
+function drawTitle() {
+  drawBackground();
+  ctx.save();
+
+  // 로고
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = COLOR.navy;
+  ctx.font = 'bold 34px sans-serif';
+  ctx.fillText('하치 주방 캐치', W / 2, H * 0.17);
+  ctx.fillStyle = COLOR.red;
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('— HACHIRO 하치로 —', W / 2, H * 0.17 + 32);
+
+  // 하치 (가운데서 대기, 살랑살랑)
+  hachi.x = hachi.targetX = W / 2 + Math.sin(playTime * 1.2) * 10;
+  drawHachi();
+
+  // 떨어지는 데코 이모지
+  ctx.font = '22px sans-serif';
+  ['🍚', '🥓', '🧀', '🦐', '🥚'].forEach((em, i) => {
+    const yy = ((playTime * 40 + i * 130) % (H * 0.5));
+    ctx.globalAlpha = 0.5;
+    ctx.fillText(em, 40 + i * ((W - 80) / 4), H * 0.22 + yy * 0.6);
+  });
+  ctx.globalAlpha = 1;
+
+  // 설명 카드
+  const cardY = H * 0.36;
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  rr(30, cardY, W - 60, 118, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(30,42,56,0.2)'; ctx.lineWidth = 1.5;
+  rr(30, cardY, W - 60, 118, 14); ctx.stroke();
+  ctx.fillStyle = COLOR.navy;
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('알바생 하치의 첫 출근!', W / 2, cardY + 24);
+  ctx.font = '13px sans-serif';
+  ctx.fillStyle = COLOR.navy2;
+  ctx.fillText('좌우로 드래그해서 주문서의', W / 2, cardY + 50);
+  ctx.fillText('재료를 순서대로 받아라!', W / 2, cardY + 70);
+  ctx.fillStyle = COLOR.red;
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('🧦 양말이나 🐟 옆집 재료는 받으면 안 돼!!', W / 2, cardY + 98);
+
+  // 시작 버튼
+  const btnY = H * 0.36 + 140;
+  const pulse = 1 + Math.sin(playTime * 4) * 0.03;
+  ctx.save();
+  ctx.translate(W / 2, btnY + 26);
+  ctx.scale(pulse, pulse);
+  ctx.fillStyle = COLOR.orange;
+  rr(-90, -26, 180, 52, 26); ctx.fill();
+  ctx.fillStyle = COLOR.navy;
+  ctx.font = 'bold 19px sans-serif';
+  ctx.fillText('출근하기 🐕', 0, 1);
+  ctx.restore();
+
+  if (bestScore > 0) {
+    ctx.fillStyle = COLOR.navy2;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText('🏆 최고 기록 ' + bestScore + '점', W / 2, btnY + 74);
+  }
+
+  ctx.fillStyle = 'rgba(30,42,56,0.45)';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('일본식 돈부리 하치로 · 서현점 / 미금점', W / 2, H - 20);
+  ctx.restore();
+}
+
+function drawGameOver() {
+  ctx.save();
+  ctx.fillStyle = 'rgba(30,42,56,0.78)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const cy = H * 0.3;
+  ctx.font = '46px sans-serif';
+  ctx.fillText('🍜', W / 2, cy - 66);
+  ctx.fillStyle = COLOR.cream;
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('영업 종료!', W / 2, cy - 14);
+  ctx.fillStyle = 'rgba(245,239,224,0.8)';
+  ctx.font = '13px sans-serif';
+  ctx.fillText(gameOverLine, W / 2, cy + 16);
+
+  // 결과 카드
+  const cardY = cy + 44;
+  ctx.fillStyle = 'rgba(245,239,224,0.96)';
+  rr(46, cardY, W - 92, 122, 14); ctx.fill();
+  ctx.fillStyle = COLOR.navy;
+  ctx.font = 'bold 15px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('점수', 66, cardY + 30);
+  ctx.fillText('완성한 메뉴', 66, cardY + 62);
+  ctx.fillText('최고 기록', 66, cardY + 94);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = COLOR.red;
+  ctx.font = 'bold 17px sans-serif';
+  ctx.fillText(score + '점', W - 66, cardY + 30);
+  ctx.fillText(menusDone + '그릇', W - 66, cardY + 62);
+  ctx.fillStyle = score >= bestScore && score > 0 ? COLOR.red : COLOR.navy2;
+  ctx.fillText(bestScore + '점' + (score >= bestScore && score > 0 ? ' NEW!' : ''), W - 66, cardY + 94);
+
+  // 다시하기
+  if (overTimer > 0.6) {
+    const btnY = cardY + 152;
+    const pulse = 1 + Math.sin(overTimer * 4) * 0.03;
+    ctx.save();
+    ctx.translate(W / 2, btnY + 24);
+    ctx.scale(pulse, pulse);
+    ctx.fillStyle = COLOR.orange;
+    rr(-85, -24, 170, 48, 24); ctx.fill();
+    ctx.fillStyle = COLOR.navy;
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 17px sans-serif';
+    ctx.fillText('다시 출근하기 💪', 0, 1);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function render() {
+  ctx.save();
+  // 화면 흔들림
+  if (shakeT > 0) {
+    const s = shakeT * 14;
+    ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+  }
+
+  if (scene === 'title') {
+    drawTitle();
+    drawToasts();
+    ctx.restore();
+    return;
+  }
+
+  drawBackground();
+  items.forEach(drawItem);
+  drawHachi();
+  drawOrderPanel();
+  drawHUD();
+  drawParticles();
+  drawToasts();
+
+  if (scene === 'clear') drawClearOverlay();
+  if (scene === 'over') drawGameOver();
+  ctx.restore();
+}
+
+/* ============================================================
+ * 메인 루프
+ * ============================================================ */
+let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
