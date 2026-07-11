@@ -441,8 +441,8 @@
     const k=Math.min(1,dt*3);
     view.z+=(tz-view.z)*k; view.fx+=(tfx-view.fx)*k; view.fy+=(tfy-view.fy)*k;
     const dw=vw*s0*view.z, dh=vh*s0*view.z;
-    let ox=W/2-view.fx*dw;   // 얼굴을 가로 중앙에
-    let oy=H*0.4-view.fy*dh; // 얼굴을 세로 40% 높이에 (노렌에 안 가리게)
+    let ox=W/2-view.fx*dw;    // 얼굴을 가로 중앙에
+    let oy=H*0.44-view.fy*dh; // 얼굴을 세로 44% 높이에 (노렌 아래, 턱까지 보이게)
     ox=Math.min(0,Math.max(W-dw,ox));
     oy=Math.min(0,Math.max(H-dh,oy));
     curT={dw,dh,ox,oy};
@@ -477,7 +477,7 @@
   cv.addEventListener('pointerdown',e=>{
     const rect=cv.getBoundingClientRect();
     const y=e.clientY-rect.top;
-    if(camOn&&y<H*0.6){
+    if(camOn&&y<H*0.75){
       filterIdx=(filterIdx+1)%FILTERS.length;
       bark(0,1.15);
     }
@@ -587,7 +587,7 @@
       sfxPass();
       showStamp(sc>=100?'PERFECT!':'PASS!','#3a9b5c');
       flashColor='rgba(58,155,92,'; flashT=0.22;
-      spawnConfetti(W*0.74,H*0.4);
+      spawnConfetti(W*0.74,H*0.6);
     } else {
       S.tries++;
       heardEl.textContent='🔴 "'+heard+'" — '+sc+'% (66% 이상이어야 통과)';
@@ -783,7 +783,7 @@
     ctx.restore();
   }
   function drawBelt(){
-    const by=H*0.62;
+    const by=H*0.78; // 벨트를 아래로 내려 얼굴 공간 확보
     // 나무 카운터
     const grad=ctx.createLinearGradient(0,by+22*scale,0,H);
     grad.addColorStop(0,'#8a5a34'); grad.addColorStop(1,'#654024');
@@ -795,8 +795,8 @@
     ctx.fillStyle='#57636f';
     const gap=44*scale, off=((S.t*60*S.speed)%gap);
     for(let x=-gap+off;x<W;x+=gap){ rr(x,by+5*scale,28*scale,14*scale,4*scale); ctx.fill(); }
-    // 토리이풍 검문 게이트
-    const gx=W*0.74, top=H*0.17;
+    // 토리이풍 검문 게이트 (낮게)
+    const gx=W*0.74, top=H*0.46;
     ctx.fillStyle='#b03a2a';
     rr(gx-46*scale,top,92*scale,10*scale,3*scale); ctx.fill(); // 상단보
     ctx.fillRect(gx-33*scale,top+8*scale,9*scale,by-top-8*scale);
@@ -816,7 +816,7 @@
     }
   }
   function drawBowl(){
-    const by=H*0.62, cx=S.bowlX, baseY=by+2*scale;
+    const by=H*0.78, cx=S.bowlX, baseY=by+2*scale;
     // 김 모락모락
     ctx.lineCap='round'; ctx.lineWidth=2.5*scale;
     for(const s of [-1,0,1]){
@@ -849,8 +849,8 @@
   }
   function drawHachi(){
     // 게이트 옆 심사위원장 하치 (시바견)
-    const cx=W*0.87, r=30*scale;
-    let cy=H*0.44;
+    const cx=W*0.87, r=24*scale;
+    let cy=H*0.6;
     const happy=S.mood==='happy'&&S.moodT>0;
     const sass=S.mood==='sass'&&S.moodT>0;
     if (happy) cy-=Math.abs(Math.sin(S.t*12))*10*scale; // 신나서 점프
