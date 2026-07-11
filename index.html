@@ -46,10 +46,10 @@
     <h1>🎤 하치의 발음 검문소</h1>
     <div class="sub">
       컨베이어벨트 위 돈부리가 검문 게이트로 갑니다.<br>
-      메뉴 이름을 <b>영어 발음</b>으로 말하면 정확도를 %로 측정!<br>
-      <b>66% 이상</b>이면 게이트가 열리고 점수로 쌓입니다.<br>
-      🙅 위급할 땐 <b>"NO! NO! NO!"</b> 절규 — 외친 만큼 벨트가 후진!<br>
-      📷 카메라를 허용하면 <b>금발 지배인</b>(턱시도+뽀샤시)으로 변신 (화면 톡 = 필터 변경)
+      게임이 시작되면 마이크가 <b>계속 듣고 있어요</b> — 그냥 말하면 됩니다!<br>
+      <b>영어 발음</b> 정확도를 %로 측정, <b>66% 이상</b>이면 통과 + 점수!<br>
+      🙅 위급할 땐 <b>"NO! NO! NO!"</b> 절규 — 외치는 즉시 벨트가 후진!<br>
+      📷 카메라를 허용하면 얼굴 자동 줌 + <b>금발 지배인</b> 필터 (화면 톡 = 변경)
     </div>
     <div id="resultBox" class="hidden">
       <div id="failMsg" style="font-size:14px;margin-bottom:6px;line-height:1.6;"></div>
@@ -187,6 +187,9 @@
 
   // ---------- 얼굴 인식 (MediaPipe) — 필터가 진짜 얼굴을 따라다님 ----------
   let fd=null, fdBusy=false, faceRaw=null, face=null, faceLostT=0;
+  let faceVid=null;                    // 비디오 좌표계 얼굴 (자동 줌용)
+  const view={z:1,fx:0.5,fy:0.45};     // 현재 카메라 줌 상태 (부드럽게 따라감)
+  let curT={dw:1,dh:1,ox:0,oy:0};      // 이번 프레임의 비디오→캔버스 변환
   function initFaceDetection(){
     if(fd||typeof FaceDetection==='undefined') return;
     try{
@@ -197,6 +200,7 @@
         if(res.detections&&res.detections.length){
           const d=res.detections[0];
           faceRaw={bb:d.boundingBox,lm:d.landmarks};
+          faceVid={x:d.boundingBox.xCenter,y:d.boundingBox.yCenter,w:d.boundingBox.width};
           faceLostT=0;
         }
       });
@@ -210,16 +214,11 @@
     }
     setTimeout(detectLoop,80);
   }
-  function videoTransform(){
-    const vw=camVideo.videoWidth||640, vh=camVideo.videoHeight||480;
-    const s=Math.max(W/vw,H/vh);
-    return {dw:vw*s,dh:vh*s,ox:(W-vw*s)/2,oy:(H-vh*s)/2};
-  }
   function toCanvas(pt,T){ return {x: W-(T.ox+pt.x*T.dw), y: T.oy+pt.y*T.dh}; } // 거울 반전
   function updateFace(){
     faceLostT+=dt;
     if(faceRaw){
-      const T=videoTransform();
+      const T=curT;
       const bb=faceRaw.bb;
       const lm=faceRaw.lm.map(p=>toCanvas(p,T));
       // 눈 두 개를 화면 x 기준으로 정렬해서 기울기 계산 (거울 반전 대응)
@@ -431,10 +430,25 @@
 
   function drawCamBG(){
     if(!(camOn&&camVideo&&camVideo.readyState>=2)) return false;
-    const T=videoTransform();
+    const vw=camVideo.videoWidth||640, vh=camVideo.videoHeight||480;
+    const s0=Math.max(W/vw,H/vh);
+    // 얼굴이 화면에 크게 나오도록 자동 줌인 (얼굴 폭 ≈ 화면의 48%)
+    let tz=1, tfx=0.5, tfy=0.45;
+    if(faceVid&&faceLostT<1.2){
+      tz=Math.min(2.4,Math.max(1,(W*0.48)/(faceVid.w*vw*s0)));
+      tfx=faceVid.x; tfy=faceVid.y;
+    }
+    const k=Math.min(1,dt*3);
+    view.z+=(tz-view.z)*k; view.fx+=(tfx-view.fx)*k; view.fy+=(tfy-view.fy)*k;
+    const dw=vw*s0*view.z, dh=vh*s0*view.z;
+    let ox=W/2-view.fx*dw;   // 얼굴을 가로 중앙에
+    let oy=H*0.4-view.fy*dh; // 얼굴을 세로 40% 높이에 (노렌에 안 가리게)
+    ox=Math.min(0,Math.max(W-dw,ox));
+    oy=Math.min(0,Math.max(H-dh,oy));
+    curT={dw,dh,ox,oy};
     ctx.save();
     ctx.translate(W,0); ctx.scale(-1,1); // 거울 모드
-    ctx.drawImage(camVideo,T.ox,T.oy,T.dw,T.dh);
+    ctx.drawImage(camVideo,ox,oy,dw,dh);
     ctx.restore();
     updateFace();
     drawFaceFilter();
@@ -589,49 +603,80 @@
   function showSass(){ sassText=SASS[Math.floor(Math.random()*SASS.length)]; sassT=1.6; }
 
   // ---------- NO!NO!NO! 절규 구조 ----------
-  function countNo(alts){
+  function noCountInWord(w){
+    if(/^no+$/.test(w)||w==='nah'||w==='noe') return 1;
+    if(/^(no)+o*$/.test(w)) return (w.match(/no/g)||[]).length; // "nonono"처럼 붙여 외쳐도 인식
+    return 0;
+  }
+  function countNoLoose(t){ // 문장 안에 섞여 있어도 NO 개수를 센다 (실시간용)
+    const h=(t||'').toLowerCase().replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();
+    if(!h) return 0;
+    return h.split(' ').reduce((a,w)=>a+noCountInWord(w),0);
+  }
+  function countNo(alts){ // 발화가 거의 전부 NO일 때만 (판정 스킵용)
     for(const t of alts){
       const h=t.toLowerCase().replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();
       if(!h) continue;
       const words=h.split(' ');
-      const nos=words.filter(w=>/^no+$/.test(w)||w==='nah').length;
-      if(nos>0 && nos>=words.length-1) return nos; // 거의 전부 NO일 때만
+      const nos=words.reduce((a,w)=>a+noCountInWord(w),0);
+      const nonNo=words.filter(w=>noCountInWord(w)===0).length;
+      if(nos>0 && nonNo<=1) return nos;
     }
     return 0;
   }
   function rescue(n){
-    if(!S.playing) return;
+    if(!S.playing||n<=0) return;
     const steps=Math.min(n,5);
     S.bowlX=Math.max(-40*scale,S.bowlX-steps*22*scale);
-    heardEl.textContent='🙅 NO×'+n+'!! 벨트 '+steps+'칸 후진!';
-    sfxNo(n);
+    heardEl.textContent='🙅 NO×'+steps+'!! 벨트 '+steps+'칸 후진!';
+    sfxNo(steps);
     S.mood='sass'; S.moodT=1.0;
     sassText='노노노 해도 발음은 해야 합니다?!'; sassT=1.6;
   }
 
-  // ---------- 음성 인식 ----------
+  // ---------- 음성 인식 (게임 중 상시 듣기) ----------
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  let rec=null, listening=false;
+  let rec=null, listening=false, wantListen=false, lastNoCount=0;
   if (SR){
     rec=new SR();
     rec.lang='en-US';
-    rec.interimResults=false;
-    rec.maxAlternatives=6;
+    rec.continuous=true;
+    rec.interimResults=true; // 말하는 도중에도 NO를 실시간 감지
+    rec.maxAlternatives=4;
     rec.onresult=e=>{
-      const alts=[...e.results[0]].map(r=>r.transcript);
-      const noCount=countNo(alts);
-      if (noCount>0){ rescue(noCount); return; } // NO 절규는 판정 대신 벨트 후진
-      let bestT=alts[0], bestS=-1;
-      for(const t of alts){ const s=matchScore(t); if(s>bestS){ bestS=s; bestT=t; } }
-      judge(bestT);
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const res=e.results[i];
+        const alts=[...res].map(r=>r.transcript);
+        if(!res.isFinal){
+          const n=countNoLoose(alts[0]);
+          if(n>lastNoCount){ rescue(n-lastNoCount); lastNoCount=n; } // 절규 즉시 후진
+        } else {
+          const noC=countNo(alts);
+          if (noC>0){ if(noC>lastNoCount) rescue(noC-lastNoCount); }
+          else {
+            let bestT=alts[0], bestS=-1;
+            for(const t of alts){ const s=matchScore(t); if(s>bestS){ bestS=s; bestT=t; } }
+            if (bestS>=20) judge(bestT); // 확실한 시도만 판정 (잡음/혼잣말은 무시)
+            else if (bestT&&bestT.trim()) heardEl.textContent='👂 "'+bestT+'" ...는 메뉴 발음이 아닌 것 같아요';
+          }
+          lastNoCount=0;
+        }
+      }
     };
-    rec.onend=()=>{ listening=false; micBtn.classList.remove('listening'); micBtn.textContent='🎤 누르고 발음하기'; };
+    rec.onend=()=>{
+      listening=false;
+      if (wantListen&&S.playing){ // 게임 중엔 자동 재시작 (상시 듣기 유지)
+        try{ rec.start(); listening=true; return; }catch(e){}
+      }
+      micBtn.classList.remove('listening');
+      micBtn.textContent='🎤 누르면 다시 듣기 시작';
+    };
     rec.onerror=ev=>{
-      listening=false; micBtn.classList.remove('listening');
       if (ev.error==='not-allowed'||ev.error==='service-not-allowed'){
+        wantListen=false;
         enableTypeMode('마이크 권한이 막혀 있어요. 타이핑 모드로 전환합니다.');
-      } else heardEl.textContent='(잘 안 들렸어요, 다시!)';
-      micBtn.textContent='🎤 누르고 발음하기';
+      }
+      // no-speech/aborted 등은 onend의 자동 재시작에 맡긴다
     };
   }
   function enableTypeMode(msg){
@@ -665,15 +710,17 @@
       return false;
     }
   }
-  micBtn.addEventListener('click',async ()=>{
+  async function startListening(){
     if(!S.playing||!rec||listening) return;
     if(!(await ensureMic())) return;
+    wantListen=true; lastNoCount=0;
     try {
       rec.start(); listening=true;
       micBtn.classList.add('listening');
-      micBtn.textContent='🎙️ 듣는 중... 말하세요!';
+      micBtn.textContent='🎙️ 계속 듣는 중 — 그냥 말하세요! (위급하면 NO!)';
     } catch(e){}
-  });
+  }
+  micBtn.addEventListener('click',startListening);
   typeGo.addEventListener('click',()=>{
     if(!S.playing||!typeInput.value) return;
     const v=typeInput.value; typeInput.value='';
@@ -951,6 +998,7 @@
 
   function gameOver(){
     S.playing=false;
+    wantListen=false;
     if(rec&&listening){ try{rec.stop();}catch(e){} }
     sfxGameOver();
     failEl.innerHTML = S.heardLast
@@ -969,9 +1017,10 @@
     resize();
     overlay.classList.add('hidden');
     S.playing=true;
-    audioCtx();     // 사용자 제스처로 오디오 활성화
-    ensureCam();    // 카메라 켜기 (허용 시 전체 화면 + 얼굴 추적 필터)
-    if (!SR) enableTypeMode();
+    audioCtx();       // 사용자 제스처로 오디오 활성화
+    ensureCam();      // 카메라 켜기 (허용 시 얼굴 자동 줌 + 필터)
+    if (SR) startListening(); // 시작하자마자 상시 듣기
+    else enableTypeMode();
   }
   btn.addEventListener('click',startGame);
 
