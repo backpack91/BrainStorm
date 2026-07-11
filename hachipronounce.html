@@ -190,8 +190,33 @@
   }
   if (!SR) micWarn.textContent='⚠️ 이 환경은 음성 인식이 지원되지 않아 타이핑 모드로 실행됩니다. (호스팅된 링크를 크롬/사파리로 열면 음성 모드 사용 가능)';
 
-  micBtn.addEventListener('click',()=>{
+  // 마이크 권한을 명시적으로 먼저 요청해야 iOS 사파리/일부 브라우저에서 프롬프트가 뜬다
+  let micReady=false;
+  async function ensureMic(){
+    if (micReady) return true;
+    if (!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      enableTypeMode('이 브라우저는 마이크를 지원하지 않아 타이핑 모드로 전환합니다.');
+      return false;
+    }
+    try {
+      heardEl.textContent='마이크 권한을 요청하는 중...';
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      stream.getTracks().forEach(t=>t.stop());
+      micReady=true;
+      heardEl.textContent='';
+      return true;
+    } catch(e){
+      if (window.self!==window.top){
+        enableTypeMode('내장 프레임에서는 마이크가 차단됩니다. 이 페이지를 새 탭/외부 브라우저로 열어주세요. 우선 타이핑 모드로!');
+      } else {
+        enableTypeMode('마이크 권한이 차단되어 있어요. 주소창의 자물쇠 아이콘 → 마이크 허용 후 새로고침! 우선 타이핑 모드로 전환합니다.');
+      }
+      return false;
+    }
+  }
+  micBtn.addEventListener('click',async ()=>{
     if(!S.playing||!rec||listening) return;
+    if(!(await ensureMic())) return;
     try {
       rec.start(); listening=true;
       micBtn.classList.add('listening');
