@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>하치의 발음 검문소 — HACHIRO</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; background:#1e2a38; font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif; overscroll-behavior:none; touch-action:none; }
+  #wrap { position:relative; width:100%; height:100%; display:flex; flex-direction:column; }
+  canvas { display:block; width:100%; flex:1; touch-action:none; }
+  #panel { background:#f5efe0; padding:12px 14px 18px; border-top:4px solid #1e2a38; }
+  #target { text-align:center; margin-bottom:4px; }
+  #target .kr { font-size:22px; font-weight:900; color:#1e2a38; }
+  #target .en { font-size:28px; font-weight:900; color:#c8503c; letter-spacing:1px; }
+  #heard { text-align:center; min-height:22px; font-size:14px; font-weight:700; color:#5b7fa6; margin-bottom:8px; }
+  #micBtn { display:block; width:100%; height:74px; border:none; border-radius:18px; background:#c8503c; color:#fff; font-size:20px; font-weight:900; box-shadow:0 4px 0 #93392a; }
+  #micBtn.listening { background:#3a9b5c; box-shadow:0 4px 0 #26693d; animation:pulse 1s infinite; }
+  @keyframes pulse { 50% { transform:scale(1.02); } }
+  #typeRow { display:none; gap:8px; margin-top:8px; }
+  #typeRow input { flex:1; height:52px; border:2.5px solid #1e2a38; border-radius:12px; font-size:17px; padding:0 12px; font-weight:700; }
+  #typeRow button { width:90px; border:none; border-radius:12px; background:#1e2a38; color:#fff; font-weight:900; font-size:16px; }
+  #overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(30,42,56,.88); color:#f5efe0; text-align:center; padding:24px; z-index:5; }
+  #overlay h1 { font-size:26px; font-weight:900; margin-bottom:10px; }
+  #overlay .sub { font-size:14px; opacity:.9; margin-bottom:20px; line-height:1.8; }
+  #overlay .big { font-size:42px; font-weight:900; color:#f0a83c; margin:4px 0; }
+  #btn { background:#f0a83c; color:#1e2a38; font-size:17px; font-weight:900; border:none; padding:14px 42px; border-radius:14px; box-shadow:0 4px 0 #b87c1f; }
+  #btn:active { transform:translateY(3px); box-shadow:0 1px 0 #b87c1f; }
+  .hidden { display:none !important; }
+  .warn { font-size:12px; opacity:.75; margin-top:10px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+  <div id="panel">
+    <div id="target"><span class="kr">-</span><br><span class="en">-</span></div>
+    <div id="heard"></div>
+    <button id="micBtn">🎤 누르고 발음하기</button>
+    <div id="typeRow">
+      <input id="typeInput" placeholder="영어 발음을 입력하세요 (예: buta don)" autocomplete="off">
+      <button id="typeGo">통과!</button>
+    </div>
+  </div>
+  <div id="overlay">
+    <h1>🎤 하치의 발음 검문소</h1>
+    <div class="sub">
+      컨베이어벨트 위 돈부리가 검문 게이트로 갑니다.<br>
+      메뉴 이름을 <b>영어 발음</b>으로 정확히 말해야 게이트가 열립니다!<br>
+      하치 심사위원이 아주... 깐깐합니다 😤
+    </div>
+    <div id="resultBox" class="hidden">
+      <div id="failMsg" style="font-size:14px;margin-bottom:6px;line-height:1.6;"></div>
+      <div class="big" id="finalScore">0개 통과</div>
+    </div>
+    <button id="btn">검문 시작</button>
+    <div class="warn" id="micWarn"></div>
+  </div>
+</div>
+<script>
+(() => {
+  const cv=document.getElementById('game');
+  const ctx=cv.getContext('2d');
+  const overlay=document.getElementById('overlay');
+  const btn=document.getElementById('btn');
+  const micBtn=document.getElementById('micBtn');
+  const heardEl=document.getElementById('heard');
+  const targetKr=document.querySelector('#target .kr');
+  const targetEn=document.querySelector('#target .en');
+  const resultBox=document.getElementById('resultBox');
+  const finalEl=document.getElementById('finalScore');
+  const failEl=document.getElementById('failMsg');
+  const micWarn=document.getElementById('micWarn');
+  const typeRow=document.getElementById('typeRow');
+  const typeInput=document.getElementById('typeInput');
+  const typeGo=document.getElementById('typeGo');
+
+  let W,H,scale;
+  function resize(){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const rect=cv.getBoundingClientRect();
+    W=rect.width; H=rect.height;
+    cv.width=W*dpr; cv.height=H*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    scale=Math.min(W,520)/420;
+  }
+  window.addEventListener('resize',()=>setTimeout(resize,50));
+  document.addEventListener('touchmove',e=>{ if(e.target.tagName!=='INPUT') e.preventDefault(); },{passive:false});
+
+  // ---------- 메뉴 (영어 발음 + 허용 변형) ----------
+  const MENUS=[
+    { kr:'부타동', en:'BUTA DON', accept:['buta don','butadon','boota don','buta dawn','buda don','puta don'] },
+    { kr:'규동', en:'GYU DON', accept:['gyu don','gyudon','gyoo don','q don','gew don','you don','gyu dawn'] },
+    { kr:'에비동', en:'EBI DON', accept:['ebi don','ebidon','abby don','ebby don','evie don','abbey don'] },
+    { kr:'치즈카츠동', en:'CHEESE KATSU DON', accept:['cheese katsu don','cheese cutscene','cheese katsudon','cheese cat sudan','cheese catsu don','chees katsu don','cheese kats don'] },
+    { kr:'온센타마동', en:'ONSEN TAMA DON', accept:['onsen tama don','onsen tamadon','on sen tama don','onsen tomorrow don','on send tama don'] },
+    { kr:'가라아게동', en:'KARAAGE DON', accept:['karaage don','kara age don','karage don','car adge don','karaoke don','cara don'] },
+    { kr:'하치로 스페셜', en:'HACHIRO SPECIAL', accept:['hachiro special','hachi ro special','hachiro','hach hero special','hatch hero special'] },
+    { kr:'시바이누 파르페', en:'SHIBA INU PARFAIT', accept:['shiba inu parfait','shiba inu parfe','sheba inu parfait','shiba inu par fait','shiba inu perfect'] },
+  ];
+
+  // ---------- 상태 ----------
+  const S={playing:false,idx:0,passed:0,t:0,speed:1,bowlX:0,gateOpen:0,mood:'normal',moodT:0,tries:0,heardLast:''};
+  let dt=0,last=0;
+
+  function currentMenu(){ return MENUS[S.idx%MENUS.length]; }
+  function newBowl(){
+    S.bowlX=-60*scale; S.gateOpen=0; S.tries=0; S.heardLast='';
+    const m=currentMenu();
+    targetKr.textContent=m.kr;
+    targetEn.textContent='"'+m.en+'"';
+    heardEl.textContent='';
+  }
+  function reset(){
+    S.idx=0; S.passed=0; S.t=0; S.speed=1; S.mood='normal';
+    newBowl();
+  }
+
+  // ---------- 판정 ----------
+  function normalize(s){ return s.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim(); }
+  function lev(a,b){
+    const m=a.length,n=b.length;
+    const d=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);
+    for(let j=0;j<=n;j++) d[0][j]=j;
+    for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+      d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+    return d[m][n];
+  }
+  function isMatch(heard){
+    const h=normalize(heard);
+    if(!h) return false;
+    return currentMenu().accept.some(a=>{
+      const na=normalize(a);
+      if (h.includes(na)) return true;
+      const dist=lev(h,na);
+      return dist <= Math.max(1,Math.floor(na.length*0.25));
+    });
+  }
+  const SASS=[ // 킹받는 하치 멘트
+    '네? 뭐라구요? 🙉',
+    '음~ 아닌데요 (도리도리)',
+    '그 발음으로는 못 지나갑니다 손님 😤',
+    '하치가 못 알아들었어요. 다시!',
+    'L발음이... 아니 그냥 다시 하세요',
+    '혀에 힘 빼시고~ 다시 한 번?',
+  ];
+  function judge(heard){
+    if(!S.playing) return;
+    S.heardLast=heard;
+    if (isMatch(heard)){
+      heardEl.textContent='🟢 "'+heard+'" — 통과!';
+      S.gateOpen=1; S.mood='happy'; S.moodT=1.2;
+    } else {
+      S.tries++;
+      heardEl.textContent='🔴 "'+heard+'" ...라고 들렸어요';
+      S.mood='sass'; S.moodT=1.2;
+      showSass();
+    }
+  }
+  let sassText='',sassT=0;
+  function showSass(){ sassText=SASS[Math.floor(Math.random()*SASS.length)]; sassT=1.6; }
+
+  // ---------- 음성 인식 ----------
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  let rec=null, listening=false;
+  if (SR){
+    rec=new SR();
+    rec.lang='en-US';
+    rec.interimResults=false;
+    rec.maxAlternatives=4;
+    rec.onresult=e=>{
+      const alts=[...e.results[0]].map(r=>r.transcript);
+      // 여러 후보 중 하나라도 매치면 통과
+      const hit=alts.find(t=>isMatch(t));
+      judge(hit||alts[0]);
+    };
+    rec.onend=()=>{ listening=false; micBtn.classList.remove('listening'); micBtn.textContent='🎤 누르고 발음하기'; };
+    rec.onerror=ev=>{
+      listening=false; micBtn.classList.remove('listening');
+      if (ev.error==='not-allowed'||ev.error==='service-not-allowed'){
+        enableTypeMode('마이크 권한이 막혀 있어요. 타이핑 모드로 전환합니다.');
+      } else heardEl.textContent='(잘 안 들렸어요, 다시!)';
+      micBtn.textContent='🎤 누르고 발음하기';
+    };
+  }
+  function enableTypeMode(msg){
+    micBtn.classList.add('hidden');
+    typeRow.style.display='flex';
+    if(msg) heardEl.textContent=msg;
+  }
+  if (!SR) micWarn.textContent='⚠️ 이 환경은 음성 인식이 지원되지 않아 타이핑 모드로 실행됩니다. (호스팅된 링크를 크롬/사파리로 열면 음성 모드 사용 가능)';
+
+  micBtn.addEventListener('click',()=>{
+    if(!S.playing||!rec||listening) return;
+    try {
+      rec.start(); listening=true;
+      micBtn.classList.add('listening');
+      micBtn.textContent='🎙️ 듣는 중... 말하세요!';
+    } catch(e){}
+  });
+  typeGo.addEventListener('click',()=>{ if(S.playing&&typeInput.value){ judge(typeInput.value); typeInput.value=''; } });
+  typeInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ typeGo.click(); } });
+
+  // ---------- 그리기 ----------
+  function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
+  function drawBG(){
+    ctx.fillStyle='#f5efe0'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#1e2a38'; ctx.fillRect(0,0,W,H*0.1);
+    ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(13*scale)}px sans-serif`;
+    ctx.fillText('HACHIRO 발음 검문소 丼  ·  통과 '+S.passed+'개', 12, H*0.065);
+  }
+  function drawBelt(){
+    const by=H*0.62;
+    ctx.fillStyle='#3f4d5c'; ctx.fillRect(0,by,W,26*scale);
+    ctx.fillStyle='#5b6b7c';
+    const gap=44*scale, off=((S.t*60*S.speed)%gap);
+    for(let x=-gap+off;x<W;x+=gap){ rr(x,by+6*scale,26*scale,14*scale,4*scale); ctx.fill(); }
+    // 게이트
+    const gx=W*0.74;
+    ctx.fillStyle='#1e2a38';
+    ctx.fillRect(gx-6*scale,H*0.16,12*scale,by-H*0.16); // 기둥
+    const doorH=(by-H*0.3)*(1-S.gateOpen);
+    ctx.fillStyle='#c8503c';
+    ctx.fillRect(gx-30*scale,by-doorH,60*scale,doorH);
+    ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(11*scale)}px sans-serif`;
+    ctx.textAlign='center';
+    if (S.gateOpen<1) ctx.fillText('STOP',gx,by-doorH/2+4*scale);
+    ctx.textAlign='left';
+  }
+  function drawBowl(){
+    const by=H*0.62;
+    const cx=S.bowlX, baseY=by;
+    ctx.fillStyle='#e8e2d2';
+    ctx.beginPath();
+    ctx.moveTo(cx-24*scale,baseY); ctx.lineTo(cx+24*scale,baseY);
+    ctx.lineTo(cx+17*scale,baseY-20*scale); ctx.lineTo(cx-17*scale,baseY-20*scale);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c8503c'; ctx.fillRect(cx-20*scale,baseY-10*scale,40*scale,4*scale);
+    ctx.fillStyle='#b8763a';
+    ctx.beginPath(); ctx.ellipse(cx,baseY-22*scale,17*scale,7*scale,0,0,7); ctx.fill();
+    // 이름표
+    ctx.fillStyle='#fff'; rr(cx-40*scale,baseY-56*scale,80*scale,22*scale,6*scale); ctx.fill();
+    ctx.strokeStyle='#1e2a38'; ctx.lineWidth=1.5; rr(cx-40*scale,baseY-56*scale,80*scale,22*scale,6*scale); ctx.stroke();
+    ctx.fillStyle='#1e2a38'; ctx.font=`900 ${Math.round(11*scale)}px sans-serif`;
+    ctx.textAlign='center'; ctx.fillText(currentMenu().kr,cx,baseY-41*scale); ctx.textAlign='left';
+  }
+  function drawHachi(){
+    // 게이트 옆 심사위원 하치
+    const cx=W*0.87, cy=H*0.5, r=34*scale;
+    ctx.save();
+    if (S.mood==='sass' && S.moodT>0) ctx.translate(Math.sin(S.t*40)*3*scale,0); // 도리도리
+    ctx.fillStyle='#f0a83c';
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.fill();
+    // 귀
+    ctx.beginPath(); ctx.moveTo(cx-r*0.8,cy-r*0.4); ctx.lineTo(cx-r*0.6,cy-r*1.3); ctx.lineTo(cx-r*0.15,cy-r*0.75); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx+r*0.15,cy-r*0.75); ctx.lineTo(cx+r*0.6,cy-r*1.3); ctx.lineTo(cx+r*0.8,cy-r*0.4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fdf4e3';
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*0.35,r*0.55,r*0.42,0,0,7); ctx.fill();
+    ctx.fillStyle='#1e2a38';
+    if (S.mood==='happy'&&S.moodT>0){
+      ctx.lineWidth=3*scale; ctx.strokeStyle='#1e2a38';
+      ctx.beginPath(); ctx.arc(cx-r*0.3,cy-r*0.15,r*0.14,Math.PI,0); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+r*0.3,cy-r*0.15,r*0.14,Math.PI,0); ctx.stroke();
+    } else if (S.mood==='sass'&&S.moodT>0){
+      ctx.fillRect(cx-r*0.42,cy-r*0.2,r*0.26,r*0.08); // 째려봄
+      ctx.fillRect(cx+r*0.16,cy-r*0.2,r*0.26,r*0.08);
+    } else {
+      ctx.beginPath(); ctx.arc(cx-r*0.3,cy-r*0.15,r*0.11,0,7); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+r*0.3,cy-r*0.15,r*0.11,0,7); ctx.fill();
+    }
+    ctx.fillStyle='#1e2a38';
+    ctx.beginPath(); ctx.arc(cx,cy+r*0.2,r*0.1,0,7); ctx.fill();
+    // 심사위원 리본
+    ctx.fillStyle='#c8503c'; rr(cx-r*0.5,cy+r*0.75,r,r*0.35,4*scale); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font=`900 ${Math.round(9*scale)}px sans-serif`;
+    ctx.textAlign='center'; ctx.fillText('심사위원',cx,cy+r*1.0); ctx.textAlign='left';
+    ctx.restore();
+    // 멘트 말풍선
+    if (sassT>0){
+      ctx.fillStyle='#fff';
+      const tw=ctx.measureText(sassText).width;
+      rr(cx-160*scale,cy-r*2.4,180*scale,34*scale,10*scale); ctx.fill();
+      ctx.strokeStyle='#1e2a38'; ctx.lineWidth=2; rr(cx-160*scale,cy-r*2.4,180*scale,34*scale,10*scale); ctx.stroke();
+      ctx.fillStyle='#c8503c'; ctx.font=`900 ${Math.round(12*scale)}px sans-serif`;
+      ctx.textAlign='center'; ctx.fillText(sassText,cx-70*scale,cy-r*2.4+22*scale); ctx.textAlign='left';
+    }
+    if (S.mood==='happy'&&S.moodT>0){
+      ctx.font=`${Math.round(22*scale)}px sans-serif`;
+      ctx.fillText('✨ PASS!',cx-60*scale,cy-r*1.6);
+    }
+  }
+
+  // ---------- 루프 ----------
+  function loop(ts){
+    requestAnimationFrame(loop);
+    dt=Math.min((ts-last)/1000,0.033); last=ts;
+    if(!W) resize();
+    ctx.clearRect(0,0,W,H);
+    drawBG(); drawBelt(); drawBowl(); drawHachi();
+    if (S.moodT>0) S.moodT-=dt;
+    if (sassT>0) sassT-=dt;
+    if (!S.playing) return;
+
+    S.t+=dt;
+    const gx=W*0.74;
+    // 그릇 이동
+    const spd=(34+S.passed*7)*scale*S.speed;
+    if (S.gateOpen>=1){
+      S.bowlX+=spd*4*dt; // 통과 가속
+      if (S.bowlX>W+60*scale){
+        S.passed++; S.idx++;
+        newBowl();
+      }
+    } else {
+      if (S.bowlX < gx-46*scale) S.bowlX+=spd*dt;
+      else gameOver(); // 게이트 도착 = 실패
+    }
+  }
+  requestAnimationFrame(loop);
+
+  function gameOver(){
+    S.playing=false;
+    if(rec&&listening){ try{rec.stop();}catch(e){} }
+    failEl.innerHTML = S.heardLast
+      ? '마지막으로 하치가 들은 말:<br>"<b>'+S.heardLast+'</b>" ...였습니다 🫠'
+      : '아무 말도 못 하고 게이트에 도착했다...';
+    finalEl.textContent=S.passed+'개 통과';
+    resultBox.classList.remove('hidden');
+    overlay.querySelector('h1').textContent='검문 탈락...! 😤';
+    overlay.querySelector('.sub').innerHTML='하치: "발음 연습 다시 하고 오세요"<br>친구에게 도전장을 내밀어 보세요!';
+    btn.textContent='다시 도전';
+    overlay.classList.remove('hidden');
+  }
+
+  function startGame(){
+    reset();
+    resize();
+    overlay.classList.add('hidden');
+    S.playing=true;
+    if (!SR) enableTypeMode();
+  }
+  btn.addEventListener('click',startGame);
+
+  resize();
+})();
+</script>
+</body>
+</html>
