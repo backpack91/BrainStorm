@@ -88,6 +88,8 @@ const WRONG_ORDER_LINES = [
   '사장님이 CCTV로 보고 계신다...',
   '하치야 정신차려!! 멍!!',
   '레시피는 장식이 아니야!!',
+  '주문서 못 읽는 거 아니지?! 멍?!',
+  '이러다 위생등급 내려간다!!',
 ];
 const CATCH_LINES = ['냠!', '멍!', '좋았어!', '완벽해!', '오케이!'];
 const MISS_LINES  = ['앗, 놓쳤다 멍...', '재료가 아깝다...!'];
@@ -98,6 +100,60 @@ const ANGRY_LINES = [
 ];
 const COMBO_BREAK_LINES = ['콤보가 끊겼다!! 아깝다!!', '하치의 리듬이 무너졌다...'];
 const GOLDEN_LINES = ['✨ 황금 재료!! 대박!!', '✨ 사장님 몰래 쓰는 프리미엄 재료!'];
+
+/* ---------- 손님 페르소나 ----------
+ * 메뉴(손님) 하나마다 랜덤 배정. 새 손님 추가는 객체 하나면 끝. */
+const CUSTOMERS = [
+  { face: '🧑‍💼', name: '퇴근길 직장인',
+    order: '오늘 야근 각이라 빨리 부탁해요...',
+    wait: ['상사 욕하면서 먹으면 더 맛있대요', '월급은 통장을 스칠 뿐...', '아 맞다 보고서... 아니야 밥부터'],
+    hurry: '저 9시까지 회사 복귀해야 해요!!',
+    happy: '이 맛에 퇴사를 미룹니다...',
+    angry: '됐어요!! 편의점 갈래요!!',
+    review: { stars: 1, text: '기다리다 야근 시간 됨. 실화?' } },
+  { face: '💪', name: '헬스장 관장님',
+    order: '단백질 위주로요. 지금 벌크업 중이라.',
+    wait: ['닭가슴살 질려서 왔습니다', '오늘 하체 했더니 다리가 후들...', '밥도 3대 500처럼 빡세게 말아줘요'],
+    hurry: '공복 유산소 3시간째입니다만?!',
+    happy: '오~ 이거 완전 단백질 폭탄!',
+    angry: '쉐이크나 마시러 갑니다!!',
+    review: { stars: 1, text: '근손실 오는 소리 들림. 별 하나' } },
+  { face: '👵', name: '옆동네 할머니',
+    order: '우리 손주가 여기 맛있다더라~',
+    wait: ['아이고 강아지가 요리를 다 하네', '천천히 햐~ 근데 쪼~금만 빨리', '우리 때는 말이야~ (30분 경과)'],
+    hurry: '아무리 그래도 이건 좀 늦다잉...',
+    happy: '아이고 잘한다!! 우리 손주 데려와야겠네',
+    angry: '집에 가서 김치찌개 끓여 먹을란다',
+    review: { stars: 2, text: '강아지는 착한데 밥이 안 나와요' } },
+  { face: '🧑‍🎓', name: '시험기간 대학생',
+    order: '족보 외우면서 먹을 거라 빨리요ㅠ',
+    wait: ['F 맞으면 여기 탓입니다', '교수님이 밥은 먹고 다니냬요', '전공책 베고 자면 지식이 스며들까'],
+    hurry: '시험 30분 전인데요?!?!',
+    happy: '이 힘으로 올A 갑니다!!',
+    angry: '결국 공부도 밥도 망했다...',
+    review: { stars: 1, text: '기다리다 시험 지각. 재수강 확정' } },
+  { face: '🕵️', name: '자칭 미슐랭 심사위원', short: '미슐랭(자칭)',
+    order: '흠. 이 집의 진가를 확인하러 왔습니다.',
+    wait: ['조리 동선이... 흥미롭군요', '시바견 셰프라... 참신해', '지금 수첩에 다 적고 있습니다?'],
+    hurry: '기다림도 평가 항목입니다만.',
+    happy: '별을 드리죠. 시바 미슐랭 원스타.',
+    angry: '평가할 것도 없군요. 실격.',
+    review: { stars: 1, text: '음식이 안 나오면 평가 불가입니다' } },
+  { face: '📹', name: '먹방 유튜버',
+    order: '구독자 여러분~ 오늘은 돈부리 맛집!',
+    wait: ['좋아요와 구독 부탁드려요~', '어? 지금 라이브 켜져 있어요', '썸네일 각 나온다 나와~'],
+    hurry: '시청자분들 다 나가요 지금!!',
+    happy: '이거 100만뷰 각입니다!!!',
+    angry: '영상 제목: 최악의 맛집 참교육',
+    review: { stars: 1, text: '풀영상 올라갑니다. 각오하세요' } },
+  { face: '👶', name: '까다로운 꼬마',
+    order: '맛없으면 울어버릴 거예요',
+    wait: ['엄마가 맛없으면 전화하래요', '강아지 아저씨 힘내세요', '파는 빼면 안 돼요? 안 되는구나...'],
+    hurry: '울음버튼 누르기 3초 전',
+    happy: '아저씨 최고!! 멍멍 최고!!',
+    angry: '으아아아앙!!! (대성통곡)',
+    review: { stars: 1, text: '아이가 가게 앞에서 울었어요' } },
+];
 
 /* ---------- 랜덤 해프닝 이벤트 ---------- */
 const EVT_INFO = {
@@ -251,7 +307,13 @@ let nextEventIn = 999;        // 다음 이벤트까지 남은 시간(초)
 let lastEventType = null;
 let fedTraps = [];            // 손님에게 먹인 함정들 (리뷰 생성용)
 let angryCount = 0;           // 인내심 바닥나서 나간 손님 수
+let angryCustomers = [];      // 화나서 나간 손님들 (리뷰 생성용)
 let reviews = [];             // 게임오버 리뷰
+let customer = null;          // 현재 손님 페르소나
+let bubble = null;            // 손님 말풍선 {text, t, dur}
+let talkTimer = 0;            // 다음 혼잣말까지 남은 시간
+let hurrySaid = false;        // 재촉 대사는 손님당 1번
+let happyT = 0;               // 하치 기쁨 표정 타이머
 
 const hachi = { x: W / 2, targetX: W / 2, w: 96, walk: 0 };
 
@@ -273,6 +335,16 @@ function patienceFor(menu) {
 }
 function setPatience() { patienceMax = patience = patienceFor(currentMenu()); }
 
+function say(text, dur) { bubble = { text, t: 0, dur: dur || 2.6 }; }
+
+function newCustomer() {
+  const pool = CUSTOMERS.filter(c => !customer || c.name !== customer.name);
+  customer = pick(pool);
+  hurrySaid = false;
+  talkTimer = 5 + Math.random() * 4;
+  say(customer.order, 3);
+}
+
 function resetGame() {
   score = 0; lives = CFG.maxLives;
   menusDone = 0; round = 0; menuIdx = 0; stepIdx = 0;
@@ -282,9 +354,11 @@ function resetGame() {
   combo = 0; maxCombo = 0; comboPop = 0;
   curRecipe = MENUS[0].recipe.slice();
   evt = null; lastEventType = null;
-  nextEventIn = 12 + Math.random() * 8;
-  fedTraps = []; angryCount = 0; reviews = [];
+  nextEventIn = 7 + Math.random() * 5;
+  fedTraps = []; angryCount = 0; angryCustomers = []; reviews = [];
+  bubble = null; happyT = 0;
   hachi.x = hachi.targetX = W / 2;
+  newCustomer();
   setPatience();
 }
 
@@ -353,6 +427,7 @@ function onCatch(item) {
     if (evtOn('rush')) gain *= 2;
     score += gain;
     bowlStack.push(ING[item.id].emoji);
+    happyT = 0.45;
     if (!wasFever && isFever()) {
       addToast('🔥 하치 각성!! 지금부터 아무 재료나 OK!!', { big: true, dur: 2.2, color: COLOR.orangeDark });
       SFX.fever();
@@ -390,7 +465,11 @@ function menuComplete() {
   const serviceBonus = Math.floor(Math.max(0, patience / patienceMax) * CFG.timeBonusMax * (1 + round * 0.5));
   score += bonus + serviceBonus;
   menusDone++;
-  clearInfo = { name: menu.name, final: !!menu.final, bonus, serviceBonus, sub: menu.final ? FINAL_CLEAR_SUB : pick(CLEAR_SUBS) };
+  clearInfo = {
+    name: menu.name, final: !!menu.final, bonus, serviceBonus,
+    face: customer.face, custName: customer.name,
+    sub: menu.final ? FINAL_CLEAR_SUB : customer.happy,
+  };
   serveAnim = { t: 0, x: hachi.x, y: hachiBaseY() - 196, stack: bowlStack.slice() };
   bowlStack = [];
   items = [];
@@ -404,16 +483,18 @@ function menuComplete() {
   stepIdx = 0;
   curRecipe = currentMenu().recipe.slice();
   evt = null; // 진행 중이던 해프닝은 종료
+  newCustomer();
   setPatience();
 }
 
 function patienceOut() {
   lives--; shakeT = 0.6; combo = 0;
   angryCount++;
-  addToast(pick(ANGRY_LINES), { big: true, dur: 2.0, color: COLOR.red });
+  angryCustomers.push(customer);
+  addToast('🤬 ' + customer.name + ': ' + customer.angry, { big: true, dur: 2.2, color: COLOR.red });
   SFX.wrong();
   if (lives <= 0) gameOver();
-  else setPatience(); // 다음 손님 입장
+  else { setPatience(); newCustomer(); } // 다음 손님 입장
 }
 
 /* ---------- 해프닝 이벤트 ---------- */
@@ -438,7 +519,8 @@ function applyKaren() {
   const nu = pick(Object.keys(ING).filter(id => id !== old));
   curRecipe[i] = nu;
   patience = Math.min(patienceMax, patience + 2); // 바꿨으니 조금은 기다려준다
-  addToast('😤 손님: 아 잠깐만요, ' + ING[old].name + ' 빼고 ' + ING[nu].name + '(으)로요;;', { big: true, dur: 2.4, color: COLOR.red });
+  addToast('😤 ' + customer.name + ': 아 잠깐만요, ' + ING[old].name + ' 빼고 ' + ING[nu].name + '(으)로요;;', { big: true, dur: 2.4, color: COLOR.red });
+  say('원래 좀 바뀔 수도 있죠~', 2.2);
   SFX.karen();
 }
 
@@ -460,7 +542,12 @@ function buildReviews() {
   [...new Set(fedTraps)].slice(0, 2).forEach(name => {
     if (TRAP_REVIEWS[name]) out.push(TRAP_REVIEWS[name]);
   });
-  if (angryCount > 0 && out.length < 2) out.push(ANGRY_REVIEW);
+  // 화나서 나간 손님은 자기 캐릭터로 리뷰를 남긴다
+  const angryUnique = [...new Map(angryCustomers.filter(Boolean).map(c => [c.name, c])).values()];
+  angryUnique.slice(0, 2 - Math.min(out.length, 1)).forEach(c => {
+    if (out.length < 2) out.push({ name: c.name, stars: c.review.stars, text: c.review.text });
+  });
+  if (angryCount > 0 && angryUnique.length === 0 && out.length < 2) out.push(ANGRY_REVIEW);
   if (menusDone === 0) {
     out.push(ZERO_REVIEW);
   } else if (maxCombo >= CFG.feverCombo) {
@@ -546,6 +633,7 @@ function update(dt) {
   if (shakeT > 0) shakeT -= dt;
   if (hitTimer > 0) hitTimer -= dt;
   if (comboPop > 0) comboPop -= dt;
+  if (happyT > 0) happyT -= dt;
 
   if (scene === 'play') {
     playTime += dt;
@@ -556,12 +644,27 @@ function update(dt) {
       if (patience <= 0) patienceOut();
     }
 
+    // 손님 수다 (말풍선)
+    if (bubble) {
+      bubble.t += dt;
+      if (bubble.t >= bubble.dur) bubble = null;
+    }
+    if (customer) {
+      if (!hurrySaid && patience / patienceMax < 0.32) {
+        hurrySaid = true;
+        say(customer.hurry, 2.8); // 재촉은 다른 말을 끊고 나온다
+      } else if (!bubble) {
+        talkTimer -= dt;
+        if (talkTimer <= 0) { say(pick(customer.wait), 2.6); talkTimer = 5.5 + Math.random() * 4; }
+      }
+    }
+
     // 해프닝 이벤트 스케줄러
     if (!evt) {
       nextEventIn -= dt;
       if (nextEventIn <= 0) {
         startEvent();
-        nextEventIn = 16 + Math.random() * 12;
+        nextEventIn = 9 + Math.random() * 7;
       }
     } else {
       evt.t += dt;
@@ -755,6 +858,11 @@ function drawHachi() {
     ctx.font = 'bold 12px sans-serif';
     ctx.fillText('>', -13, -102);
     ctx.fillText('<', 13, -102);
+  } else if (happyT > 0) {
+    // 기쁨: ∩∩ 눈웃음
+    ctx.lineWidth = 2.5; ctx.strokeStyle = COLOR.navy;
+    ctx.beginPath(); ctx.arc(-13, -104, 4.5, Math.PI, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(13, -104, 4.5, Math.PI, Math.PI * 2); ctx.stroke();
   } else if (blink) {
     ctx.lineWidth = 2; ctx.strokeStyle = COLOR.navy;
     ctx.beginPath(); ctx.moveTo(-17, -106); ctx.lineTo(-9, -106); ctx.stroke();
@@ -963,6 +1071,63 @@ function drawHUD() {
   ctx.restore();
 }
 
+function drawCustomer() {
+  if (!customer) return;
+  const ratio = Math.max(0, patience / patienceMax);
+  const cx = 46, cy = 272;
+  const shake = ratio < 0.32 ? Math.sin(playTime * 30) * 1.5 : 0;
+
+  ctx.save();
+  ctx.translate(cx + shake, cy);
+  // 프로필 원 (테두리 = 인내심 신호등)
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 3;
+  const flash = ratio < 0.3 && Math.floor(playTime * 6) % 2 === 0;
+  ctx.strokeStyle = ratio > 0.5 ? '#7cb15c' : ratio > 0.3 ? COLOR.orange : flash ? '#ff2d1a' : COLOR.red;
+  ctx.stroke();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '28px sans-serif';
+  ctx.fillText(customer.face, 0, 1);
+  if (ratio < 0.32) { ctx.font = '14px sans-serif'; ctx.fillText('💢', 21, -20); }
+  // 이름표
+  ctx.font = 'bold 9px sans-serif';
+  const label = customer.short || customer.name;
+  const nw = Math.min(ctx.measureText(label).width + 12, 88);
+  ctx.fillStyle = COLOR.navy;
+  rr(-nw / 2, 30, nw, 15, 7); ctx.fill();
+  ctx.fillStyle = COLOR.cream;
+  ctx.fillText(label, 0, 38, nw - 8);
+  ctx.restore();
+
+  // 말풍선
+  if (bubble) {
+    const p = bubble.t / bubble.dur;
+    const alpha = p < 0.12 ? p / 0.12 : p > 0.8 ? (1 - p) / 0.2 : 1;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold 12px sans-serif';
+    const tw = ctx.measureText(bubble.text).width;
+    const bx = 74, bw = Math.min(tw + 22, W - bx - 8), bh = 30;
+    const by = cy - 15;
+    ctx.fillStyle = 'rgba(255,255,255,0.97)';
+    rr(bx, by, bw, bh, 10); ctx.fill();
+    ctx.strokeStyle = 'rgba(30,42,56,0.25)'; ctx.lineWidth = 1.5;
+    rr(bx, by, bw, bh, 10); ctx.stroke();
+    // 꼬리 (손님 쪽)
+    ctx.fillStyle = 'rgba(255,255,255,0.97)';
+    ctx.beginPath();
+    ctx.moveTo(bx + 1, by + 10);
+    ctx.lineTo(bx - 7, by + 15);
+    ctx.lineTo(bx + 1, by + 20);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = COLOR.navy;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(bubble.text, bx + 11, by + 15, bw - 20);
+    ctx.restore();
+  }
+}
+
 function drawCombo() {
   if (combo < 2) return;
   const fever = combo >= CFG.feverCombo;
@@ -1046,9 +1211,9 @@ function drawToasts() {
     ctx.save();
     ctx.globalAlpha = alpha;
     if (t.big) {
-      // 말풍선 스타일 실패 멘트
+      // 말풍선 스타일 실패 멘트 (화면 밖으로 넘치지 않게)
       ctx.font = 'bold 15px sans-serif';
-      const tw = ctx.measureText(t.text).width;
+      const tw = Math.min(ctx.measureText(t.text).width, W - 44);
       const bx = W / 2 - tw / 2 - 14, by = t.y - 20, bw = tw + 28, bh = 40;
       ctx.fillStyle = 'rgba(255,255,255,0.96)';
       rr(bx, by, bw, bh, 12); ctx.fill();
@@ -1056,7 +1221,7 @@ function drawToasts() {
       rr(bx, by, bw, bh, 12); ctx.stroke();
       ctx.fillStyle = t.color;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(t.text, W / 2, t.y);
+      ctx.fillText(t.text, W / 2, t.y, tw);
     } else {
       ctx.font = 'bold 13px sans-serif';
       ctx.fillStyle = t.color;
@@ -1092,18 +1257,24 @@ function drawClearOverlay() {
   const cy = H * 0.4;
   ctx.globalAlpha = p;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  // 손님 얼굴이 감동한다
   ctx.font = (clearInfo.final ? 40 : 44) + 'px sans-serif';
-  ctx.fillText('🎉', W / 2, cy - 64);
+  ctx.fillText('🎉 ' + (clearInfo.face || '') + ' 🎉', W / 2, cy - 66);
   ctx.fillStyle = COLOR.cream;
   ctx.font = 'bold ' + (clearInfo.final ? 24 : 28) + 'px sans-serif';
   ctx.fillText(clearInfo.name + ' 완성!', W / 2, cy);
   ctx.fillStyle = COLOR.orange;
   ctx.font = 'bold 15px sans-serif';
-  ctx.fillText(clearInfo.sub, W / 2, cy + 34);
+  ctx.fillText('"' + clearInfo.sub + '"', W / 2, cy + 34, W - 40);
+  if (clearInfo.custName) {
+    ctx.fillStyle = 'rgba(245,239,224,0.85)';
+    ctx.font = '11px sans-serif';
+    ctx.fillText('— ' + clearInfo.custName + ' 손님 —', W / 2, cy + 54);
+  }
   ctx.fillStyle = 'rgba(245,239,224,0.75)';
   ctx.font = '13px sans-serif';
-  ctx.fillText('완성 +' + clearInfo.bonus + '점 · 서비스 보너스 +' + clearInfo.serviceBonus + '점', W / 2, cy + 60);
-  ctx.fillText('속도가 빨라진다!', W / 2, cy + 80);
+  ctx.fillText('완성 +' + clearInfo.bonus + '점 · 서비스 보너스 +' + clearInfo.serviceBonus + '점', W / 2, cy + 78);
+  ctx.fillText('속도가 빨라진다!', W / 2, cy + 96);
   ctx.restore();
 }
 
@@ -1281,6 +1452,7 @@ function render() {
   drawBlackout();
   drawOrderPanel();
   drawHUD();
+  drawCustomer();
   drawCombo();
   drawEventBanner();
   drawParticles();
