@@ -46,9 +46,10 @@
     <h1>🎤 하치의 발음 검문소</h1>
     <div class="sub">
       컨베이어벨트 위 돈부리가 검문 게이트로 갑니다.<br>
-      메뉴 이름을 <b>영어 발음</b>으로 정확히 말해야 게이트가 열립니다!<br>
-      📷 카메라를 허용하면 <b>금발 지배인</b>(턱시도+뽀샤시)으로 변신!<br>
-      (화면을 톡 누르면 필터 변경: 지배인 → 선글라스 → 영국 신사)
+      메뉴 이름을 <b>영어 발음</b>으로 말하면 정확도를 %로 측정!<br>
+      <b>66% 이상</b>이면 게이트가 열리고 점수로 쌓입니다.<br>
+      🙅 위급할 땐 <b>"NO! NO! NO!"</b> 절규 — 외친 만큼 벨트가 후진!<br>
+      📷 카메라를 허용하면 <b>금발 지배인</b>(턱시도+뽀샤시)으로 변신 (화면 톡 = 필터 변경)
     </div>
     <div id="resultBox" class="hidden">
       <div id="failMsg" style="font-size:14px;margin-bottom:6px;line-height:1.6;"></div>
@@ -89,20 +90,20 @@
   window.addEventListener('resize',()=>setTimeout(resize,50));
   document.addEventListener('touchmove',e=>{ if(e.target.tagName!=='INPUT') e.preventDefault(); },{passive:false});
 
-  // ---------- 메뉴 (영어 발음 + 허용 변형) ----------
+  // ---------- 메뉴 (영어 발음 + 허용 변형 + 토핑 색) ----------
   const MENUS=[
-    { kr:'부타동', en:'BUTA DON', accept:['buta don','butadon','boota don','buda don','puta don','bta don','buta','pota don'] },
-    { kr:'규동', en:'GYU DON', accept:['gyu don','gyudon','gyoo don','q don','cue don','kyu don','gew don','you don','yu don','giudon','judon','gudon','gyeo don','gyu','que don','kew don','g don','gyu tone'] },
-    { kr:'에비동', en:'EBI DON', accept:['ebi don','ebidon','abby don','ebby don','evie don','abbey don','abi don','eb don','every don'] },
-    { kr:'치즈카츠동', en:'CHEESE KATSU DON', accept:['cheese katsu don','cheese cutscene','cheese katsudon','cheese cat sudan','cheese catsu don','chees katsu don','cheese kats don','cheese cats don','cheese cut soup don','cheese katsu'] },
-    { kr:'온센타마동', en:'ONSEN TAMA DON', accept:['onsen tama don','onsen tamadon','on sen tama don','onsen tomorrow don','on send tama don','onsen tama','on santa madon','onset tama don'] },
-    { kr:'가라아게동', en:'KARAAGE DON', accept:['karaage don','kara age don','karage don','car adge don','karaoke don','cara don','kara don','car ah gay don','karate don'] },
-    { kr:'하치로 스페셜', en:'HACHIRO SPECIAL', accept:['hachiro special','hachi ro special','hachiro','hach hero special','hatch hero special','hachiro','how chiro special'] },
-    { kr:'시바이누 파르페', en:'SHIBA INU PARFAIT', accept:['shiba inu parfait','shiba inu parfe','sheba inu parfait','shiba inu par fait','shiba inu perfect','shiba parfait','shiba inu'] },
+    { kr:'부타동', en:'BUTA DON', top:'#b0703a', accept:['buta don','butadon','boota don','buda don','puta don','bta don','buta','pota don'] },
+    { kr:'규동', en:'GYU DON', top:'#a4642f', accept:['gyu don','gyudon','gyoo don','q don','cue don','kyu don','gew don','you don','yu don','giudon','judon','gudon','gyeo don','gyu','que don','kew don','g don','gyu tone'] },
+    { kr:'에비동', en:'EBI DON', top:'#e8823c', accept:['ebi don','ebidon','abby don','ebby don','evie don','abbey don','abi don','eb don','every don'] },
+    { kr:'치즈카츠동', en:'CHEESE KATSU DON', top:'#f2c14e', accept:['cheese katsu don','cheese cutscene','cheese katsudon','cheese cat sudan','cheese catsu don','chees katsu don','cheese kats don','cheese cats don','cheese cut soup don','cheese katsu'] },
+    { kr:'온센타마동', en:'ONSEN TAMA DON', top:'#f6d98a', accept:['onsen tama don','onsen tamadon','on sen tama don','onsen tomorrow don','on send tama don','onsen tama','on santa madon','onset tama don'] },
+    { kr:'가라아게동', en:'KARAAGE DON', top:'#c07a30', accept:['karaage don','kara age don','karage don','car adge don','karaoke don','cara don','kara don','car ah gay don','karate don'] },
+    { kr:'하치로 스페셜', en:'HACHIRO SPECIAL', top:'#c8503c', accept:['hachiro special','hachi ro special','hachiro','hach hero special','hatch hero special','how chiro special'] },
+    { kr:'시바이누 파르페', en:'SHIBA INU PARFAIT', top:'#f6e7d0', accept:['shiba inu parfait','shiba inu parfe','sheba inu parfait','shiba inu par fait','shiba inu perfect','shiba parfait','shiba inu'] },
   ];
 
   // ---------- 상태 ----------
-  const S={playing:false,idx:0,passed:0,t:0,speed:1,bowlX:0,gateOpen:0,mood:'normal',moodT:0,tries:0,heardLast:''};
+  const S={playing:false,idx:0,passed:0,score:0,t:0,speed:1,bowlX:0,gateOpen:0,mood:'normal',moodT:0,tries:0,heardLast:''};
   let dt=0,last=0;
   let shakeT=0, flashT=0, flashColor='rgba(200,80,60,';
   const confetti=[];
@@ -116,7 +117,7 @@
     heardEl.textContent='';
   }
   function reset(){
-    S.idx=0; S.passed=0; S.t=0; S.speed=1; S.mood='normal';
+    S.idx=0; S.passed=0; S.score=0; S.t=0; S.speed=1; S.mood='normal';
     newBowl();
   }
 
@@ -154,6 +155,10 @@
     tone(200,0,0.28,{type:'sawtooth',vol:0.16,slideTo:100}); // 킹받는 부저
     bark(0.12,0.8); bark(0.3,0.72); // 왕! 왕! (저음 2연타)
     tone(659,0.5,0.14,{type:'triangle',vol:0.1,slideTo:415}); // "응~ 아니야~" 하강음
+  }
+  function sfxNo(n){ // NO!NO!NO! 절규 → 벨트 역회전 소리
+    for(let i=0;i<Math.min(n,5);i++) tone(520-40*i,i*0.11,0.1,{type:'square',vol:0.13,slideTo:280-30*i});
+    bark(Math.min(n,5)*0.11+0.06,0.9);
   }
   function sfxGameOver(){
     [392,370,349,311].forEach((f,i)=>tone(f,i*0.27,0.26,{type:'sawtooth',vol:0.12,slideTo:f*0.96}));
@@ -310,6 +315,16 @@
     }
     ctx.restore();
   }
+  function gentBrows(f){ // 신사용 짙은 눈썹
+    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
+    ctx.fillStyle='#4a3623';
+    for(const s of [-1,1]){
+      ctx.save(); ctx.translate(s*f.w*0.21,-f.w*0.15); ctx.rotate(s*-0.1);
+      rr(-f.w*0.13,-f.w*0.035,f.w*0.26,f.w*0.07,f.w*0.03); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
   function tuxedo(f){ // 턱 아래 턱시도: 재킷+흰 셔츠+보타이
     const chinY=f.mouth.y+f.w*0.42;
     ctx.save(); ctx.translate(f.eyes.x,chinY); ctx.rotate(f.angle);
@@ -336,16 +351,6 @@
     ctx.beginPath(); ctx.arc(0,f.w*0.18,f.w*0.055,0,7); ctx.fill();
     ctx.fillStyle='#c9c4b4'; // 셔츠 단추
     [0.42,0.6,0.78].forEach(y=>{ ctx.beginPath(); ctx.arc(0,f.w*y,f.w*0.02,0,7); ctx.fill(); });
-    ctx.restore();
-  }
-  function gentBrows(f){ // 신사용 짙은 눈썹
-    ctx.save(); ctx.translate(f.eyes.x,f.eyes.y); ctx.rotate(f.angle);
-    ctx.fillStyle='#4a3623';
-    for(const s of [-1,1]){
-      ctx.save(); ctx.translate(s*f.w*0.21,-f.w*0.15); ctx.rotate(s*-0.1);
-      rr(-f.w*0.13,-f.w*0.035,f.w*0.26,f.w*0.07,f.w*0.03); ctx.fill();
-      ctx.restore();
-    }
     ctx.restore();
   }
   function aviators(f){ // 금테 보잉 선글라스 — 눈을 확실히 가려줌
@@ -491,7 +496,7 @@
     }
   }
 
-  // ---------- 판정 (관대하게) ----------
+  // ---------- 판정: 발음 정확도 % ----------
   const WORD_FIX={dong:'don',done:'don',dawn:'don',dun:'don',ton:'don',tone:'don',tong:'don',down:'don'};
   function normalize(s){
     return s.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim()
@@ -505,19 +510,49 @@
       d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
     return d[m][n];
   }
-  function isMatch(heard){
+  const PASS_SCORE=66;
+  function matchScore(heard){ // 0~100%
     const h=normalize(heard);
-    if(!h) return false;
+    if(!h) return 0;
     const hs=h.replace(/ /g,'');
-    return currentMenu().accept.some(a=>{
-      const na=normalize(a);
-      if (h.includes(na)) return true;
-      const nas=na.replace(/ /g,'');
-      if (hs.includes(nas)) return true; // 띄어쓰기 무시하고 포함
-      const dist=Math.min(lev(h,na),lev(hs,nas));
-      return dist <= Math.max(2,Math.floor(na.length*0.34));
-    });
+    let best=0;
+    for(const a of currentMenu().accept){
+      const na=normalize(a), nas=na.replace(/ /g,'');
+      if(h.includes(na)||hs.includes(nas)) return 100;
+      const d=Math.min(lev(h,na),lev(hs,nas));
+      let sc=Math.round((1-d/Math.max(na.length,1))*100);
+      // 기존 관대한 통과 기준을 유지: 그 기준 안이면 최소 70점
+      if(d<=Math.max(2,Math.floor(na.length*0.34))) sc=Math.max(sc,70);
+      best=Math.max(best,sc);
+    }
+    return Math.max(0,Math.min(100,best));
   }
+
+  // ---------- 발음 게이지 ----------
+  let gaugeVal=0, gaugeTarget=0, gaugeT=0;
+  function setGauge(p){ gaugeVal=0; gaugeTarget=p; gaugeT=3.2; }
+  function drawGauge(){
+    if(gaugeT<=0) return;
+    gaugeVal+=(gaugeTarget-gaugeVal)*Math.min(1,dt*7);
+    const gw=Math.min(W*0.52,230*scale), gh=15*scale;
+    const x=12, y=H-gh-14;
+    ctx.fillStyle='rgba(30,42,56,.85)'; rr(x-7,y-25*scale,gw+14,gh+34*scale,10*scale); ctx.fill();
+    const v=Math.round(gaugeVal);
+    ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(11*scale)}px sans-serif`;
+    ctx.fillText('발음 정확도',x,y-9*scale);
+    ctx.textAlign='right';
+    ctx.fillStyle=v>=PASS_SCORE?'#7ddc9c':'#f0a83c';
+    ctx.fillText(v+'%',x+gw,y-9*scale);
+    ctx.textAlign='left';
+    ctx.fillStyle='rgba(255,255,255,.25)'; rr(x,y,gw,gh,gh/2); ctx.fill();
+    const col=gaugeVal>=PASS_SCORE?'#3a9b5c':gaugeVal>=45?'#f0a83c':'#c8503c';
+    ctx.fillStyle=col; rr(x,y,Math.max(gh,gw*Math.min(1,gaugeVal/100)),gh,gh/2); ctx.fill();
+    // 통과선 (66%)
+    const px=x+gw*(PASS_SCORE/100);
+    ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(px,y-3); ctx.lineTo(px,y+gh+3); ctx.stroke();
+  }
+
   const SASS=[ // 킹받는 하치 멘트
     '네? 뭐라구요? 🙉',
     '음~ 아닌데요 (도리도리)',
@@ -529,27 +564,50 @@
   function judge(heard){
     if(!S.playing) return;
     S.heardLast=heard;
-    if (isMatch(heard)){
-      heardEl.textContent='🟢 "'+heard+'" — 통과!';
+    const sc=matchScore(heard);
+    setGauge(sc);
+    if (sc>=PASS_SCORE){
+      S.score+=sc;
+      heardEl.textContent='🟢 "'+heard+'" — '+sc+'% 통과! (+'+sc+'점)';
       S.gateOpen=1; S.mood='happy'; S.moodT=1.2;
       sfxPass();
-      showStamp('PASS!','#3a9b5c');
+      showStamp(sc>=100?'PERFECT!':'PASS!','#3a9b5c');
       flashColor='rgba(58,155,92,'; flashT=0.22;
       spawnConfetti(W*0.74,H*0.4);
     } else {
       S.tries++;
-      heardEl.textContent='🔴 "'+heard+'" ...라고 들렸어요';
+      heardEl.textContent='🔴 "'+heard+'" — '+sc+'% (66% 이상이어야 통과)';
       S.mood='sass'; S.moodT=1.2;
       sfxFail();
       showStamp('FAIL!','#c8503c');
       flashColor='rgba(200,80,60,'; flashT=0.32;
       shakeT=0.45;
-      S.bowlX=Math.max(-40*scale,S.bowlX-30*scale); // 틀리면 살짝 뒤로 → 재도전 기회
       showSass();
     }
   }
   let sassText='',sassT=0;
   function showSass(){ sassText=SASS[Math.floor(Math.random()*SASS.length)]; sassT=1.6; }
+
+  // ---------- NO!NO!NO! 절규 구조 ----------
+  function countNo(alts){
+    for(const t of alts){
+      const h=t.toLowerCase().replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();
+      if(!h) continue;
+      const words=h.split(' ');
+      const nos=words.filter(w=>/^no+$/.test(w)||w==='nah').length;
+      if(nos>0 && nos>=words.length-1) return nos; // 거의 전부 NO일 때만
+    }
+    return 0;
+  }
+  function rescue(n){
+    if(!S.playing) return;
+    const steps=Math.min(n,5);
+    S.bowlX=Math.max(-40*scale,S.bowlX-steps*22*scale);
+    heardEl.textContent='🙅 NO×'+n+'!! 벨트 '+steps+'칸 후진!';
+    sfxNo(n);
+    S.mood='sass'; S.moodT=1.0;
+    sassText='노노노 해도 발음은 해야 합니다?!'; sassT=1.6;
+  }
 
   // ---------- 음성 인식 ----------
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -561,9 +619,11 @@
     rec.maxAlternatives=6;
     rec.onresult=e=>{
       const alts=[...e.results[0]].map(r=>r.transcript);
-      // 여러 후보 중 하나라도 매치면 통과
-      const hit=alts.find(t=>isMatch(t));
-      judge(hit||alts[0]);
+      const noCount=countNo(alts);
+      if (noCount>0){ rescue(noCount); return; } // NO 절규는 판정 대신 벨트 후진
+      let bestT=alts[0], bestS=-1;
+      for(const t of alts){ const s=matchScore(t); if(s>bestS){ bestS=s; bestT=t; } }
+      judge(bestT);
     };
     rec.onend=()=>{ listening=false; micBtn.classList.remove('listening'); micBtn.textContent='🎤 누르고 발음하기'; };
     rec.onerror=ev=>{
@@ -614,102 +674,233 @@
       micBtn.textContent='🎙️ 듣는 중... 말하세요!';
     } catch(e){}
   });
-  typeGo.addEventListener('click',()=>{ if(S.playing&&typeInput.value){ judge(typeInput.value); typeInput.value=''; } });
+  typeGo.addEventListener('click',()=>{
+    if(!S.playing||!typeInput.value) return;
+    const v=typeInput.value; typeInput.value='';
+    const n=countNo([v]);
+    if(n>0) rescue(n); else judge(v);
+  });
   typeInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ typeGo.click(); } });
 
-  // ---------- 그리기 ----------
+  // ---------- 그리기: HACHIRO 돈부리 가게 ----------
   function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
   function drawBG(camDrawn){
-    if(!camDrawn){ ctx.fillStyle='#f5efe0'; ctx.fillRect(-20,-20,W+40,H+40); }
-    ctx.fillStyle='rgba(30,42,56,.92)'; ctx.fillRect(-20,-20,W+40,H*0.1+20);
-    ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(13*scale)}px sans-serif`;
-    ctx.fillText('HACHIRO 발음 검문소 丼 · 통과 '+S.passed+'개', 12, H*0.065);
+    if(!camDrawn){
+      // 가게 벽: 따뜻한 크림 + 나무 기둥
+      ctx.fillStyle='#f3ead6'; ctx.fillRect(-20,-20,W+40,H+40);
+      ctx.fillStyle='rgba(122,84,50,.14)';
+      for(let x=30*scale;x<W;x+=110*scale) ctx.fillRect(x,0,9*scale,H);
+    }
+    // 노렌 (상단 포렴)
+    const nh=H*0.125;
+    ctx.fillStyle='rgba(30,42,56,.96)';
+    ctx.fillRect(-20,-20,W+40,nh+20);
+    const flaps=5, fw=W/flaps;
+    for(let i=0;i<flaps;i++){
+      ctx.beginPath();
+      ctx.moveTo(i*fw,nh); ctx.lineTo((i+1)*fw,nh);
+      ctx.lineTo((i+1)*fw-6*scale,nh+13*scale); ctx.lineTo(i*fw+6*scale,nh+13*scale);
+      ctx.closePath(); ctx.fill();
+    }
+    // 八 로고 + 상호
+    ctx.fillStyle='#c8503c';
+    ctx.beginPath(); ctx.arc(25*scale,nh*0.5,12*scale,0,7); ctx.fill();
+    ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(12*scale)}px sans-serif`;
+    ctx.textAlign='center'; ctx.fillText('八',25*scale,nh*0.5+4*scale); ctx.textAlign='left';
+    ctx.font=`900 ${Math.round(13*scale)}px sans-serif`;
+    ctx.fillText('HACHIRO 발음 검문소',44*scale,nh*0.42);
+    ctx.fillStyle='#f0a83c'; ctx.font=`900 ${Math.round(10*scale)}px sans-serif`;
+    ctx.fillText('통과 '+S.passed+'개 · SCORE '+S.score,44*scale,nh*0.78);
     if(camOn){
       ctx.textAlign='right';
-      ctx.fillStyle='#f0a83c';
-      ctx.fillText(FILTERS[filterIdx]+' (톡!)',W-12,H*0.065);
+      ctx.fillText(FILTERS[filterIdx]+' (톡!)',W-56*scale,nh*0.42);
       ctx.textAlign='left';
     }
+    // 붉은 제등 (살랑살랑)
+    drawLantern(W-30*scale,nh+2*scale);
+  }
+  function drawLantern(x,y){
+    ctx.save(); ctx.translate(x,y); ctx.rotate(Math.sin(S.t*1.6)*0.07);
+    ctx.strokeStyle='#6b4a2f'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,-4*scale); ctx.lineTo(0,7*scale); ctx.stroke();
+    ctx.fillStyle='#1e2a38'; rr(-9*scale,7*scale,18*scale,5*scale,2*scale); ctx.fill();
+    ctx.fillStyle='#c8503c';
+    ctx.beginPath(); ctx.ellipse(0,27*scale,14*scale,18*scale,0,0,7); ctx.fill();
+    ctx.strokeStyle='rgba(120,30,20,.5)'; ctx.lineWidth=1.5;
+    for(const dy of [-8,0,8]){ ctx.beginPath(); ctx.ellipse(0,27*scale+dy*scale,13*scale,4*scale,0,0,7); ctx.stroke(); }
+    ctx.fillStyle='rgba(255,225,160,.4)';
+    ctx.beginPath(); ctx.ellipse(-4*scale,23*scale,4.5*scale,8*scale,0,0,7); ctx.fill();
+    ctx.fillStyle='#fdf4e3'; ctx.font=`900 ${Math.round(12*scale)}px sans-serif`;
+    ctx.textAlign='center'; ctx.fillText('丼',0,31*scale); ctx.textAlign='left';
+    ctx.fillStyle='#1e2a38'; rr(-9*scale,43*scale,18*scale,4*scale,2*scale); ctx.fill();
+    ctx.restore();
   }
   function drawBelt(){
     const by=H*0.62;
-    ctx.fillStyle='#3f4d5c'; ctx.fillRect(0,by,W,26*scale);
-    ctx.fillStyle='#5b6b7c';
+    // 나무 카운터
+    const grad=ctx.createLinearGradient(0,by+22*scale,0,H);
+    grad.addColorStop(0,'#8a5a34'); grad.addColorStop(1,'#654024');
+    ctx.fillStyle=grad; ctx.fillRect(0,by+20*scale,W,H-by-20*scale+20);
+    ctx.strokeStyle='rgba(60,35,18,.35)'; ctx.lineWidth=2;
+    for(let y=by+34*scale;y<H;y+=15*scale){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    // 벨트
+    ctx.fillStyle='#39434f'; ctx.fillRect(0,by,W,24*scale);
+    ctx.fillStyle='#57636f';
     const gap=44*scale, off=((S.t*60*S.speed)%gap);
-    for(let x=-gap+off;x<W;x+=gap){ rr(x,by+6*scale,26*scale,14*scale,4*scale); ctx.fill(); }
-    // 게이트
-    const gx=W*0.74;
-    ctx.fillStyle='#1e2a38';
-    ctx.fillRect(gx-6*scale,H*0.16,12*scale,by-H*0.16); // 기둥
-    const doorH=(by-H*0.3)*(1-S.gateOpen);
+    for(let x=-gap+off;x<W;x+=gap){ rr(x,by+5*scale,28*scale,14*scale,4*scale); ctx.fill(); }
+    // 토리이풍 검문 게이트
+    const gx=W*0.74, top=H*0.17;
+    ctx.fillStyle='#b03a2a';
+    rr(gx-46*scale,top,92*scale,10*scale,3*scale); ctx.fill(); // 상단보
+    ctx.fillRect(gx-33*scale,top+8*scale,9*scale,by-top-8*scale);
+    ctx.fillRect(gx+24*scale,top+8*scale,9*scale,by-top-8*scale);
+    ctx.fillStyle='#1e2a38'; rr(gx-38*scale,top+13*scale,76*scale,9*scale,2*scale); ctx.fill();
+    ctx.fillStyle='#f0a83c'; ctx.font=`900 ${Math.round(8*scale)}px sans-serif`;
+    ctx.textAlign='center'; ctx.fillText('検問所',gx,top+20*scale); ctx.textAlign='left';
+    // 게이트 문
+    const doorH=(by-top-34*scale)*(1-S.gateOpen);
     ctx.fillStyle='#c8503c';
-    ctx.fillRect(gx-30*scale,by-doorH,60*scale,doorH);
-    ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(11*scale)}px sans-serif`;
-    ctx.textAlign='center';
-    if (S.gateOpen<1) ctx.fillText('STOP',gx,by-doorH/2+4*scale);
-    ctx.textAlign='left';
+    ctx.fillRect(gx-24*scale,by-doorH,48*scale,doorH);
+    ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=2;
+    for(let y=by-doorH+10*scale;y<by-4*scale;y+=12*scale){ ctx.beginPath(); ctx.moveTo(gx-20*scale,y); ctx.lineTo(gx+20*scale,y); ctx.stroke(); }
+    if (S.gateOpen<1){
+      ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(11*scale)}px sans-serif`;
+      ctx.textAlign='center'; ctx.fillText('STOP',gx,by-doorH/2+4*scale); ctx.textAlign='left';
+    }
   }
   function drawBowl(){
-    const by=H*0.62;
-    const cx=S.bowlX, baseY=by;
-    ctx.fillStyle='#e8e2d2';
+    const by=H*0.62, cx=S.bowlX, baseY=by+2*scale;
+    // 김 모락모락
+    ctx.lineCap='round'; ctx.lineWidth=2.5*scale;
+    for(const s of [-1,0,1]){
+      const ph=S.t*2.2+s*1.3;
+      ctx.strokeStyle='rgba(255,255,255,'+(0.3+0.2*Math.sin(ph*1.7))+')';
+      ctx.beginPath();
+      ctx.moveTo(cx+s*8*scale,baseY-30*scale);
+      ctx.quadraticCurveTo(cx+s*8*scale+Math.sin(ph)*5*scale,baseY-42*scale, cx+s*8*scale+Math.sin(ph+1)*3*scale,baseY-54*scale);
+      ctx.stroke();
+    }
+    // 밥 + 메뉴별 토핑
+    ctx.fillStyle='#f7f3e8';
+    ctx.beginPath(); ctx.ellipse(cx,baseY-20*scale,19*scale,8*scale,0,0,7); ctx.fill();
+    ctx.fillStyle=currentMenu().top;
+    ctx.beginPath(); ctx.ellipse(cx,baseY-23*scale,15*scale,6*scale,0,0,7); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.ellipse(cx-5*scale,baseY-25*scale,5*scale,2*scale,0,0,7); ctx.fill();
+    // 그릇
+    ctx.fillStyle='#2e3a48';
     ctx.beginPath();
-    ctx.moveTo(cx-24*scale,baseY); ctx.lineTo(cx+24*scale,baseY);
-    ctx.lineTo(cx+17*scale,baseY-20*scale); ctx.lineTo(cx-17*scale,baseY-20*scale);
+    ctx.moveTo(cx-24*scale,baseY-18*scale); ctx.lineTo(cx+24*scale,baseY-18*scale);
+    ctx.lineTo(cx+16*scale,baseY); ctx.lineTo(cx-16*scale,baseY);
     ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#c8503c'; ctx.fillRect(cx-20*scale,baseY-10*scale,40*scale,4*scale);
-    ctx.fillStyle='#b8763a';
-    ctx.beginPath(); ctx.ellipse(cx,baseY-22*scale,17*scale,7*scale,0,0,7); ctx.fill();
-    // 이름표
-    ctx.fillStyle='#fff'; rr(cx-40*scale,baseY-56*scale,80*scale,22*scale,6*scale); ctx.fill();
-    ctx.strokeStyle='#1e2a38'; ctx.lineWidth=1.5; rr(cx-40*scale,baseY-56*scale,80*scale,22*scale,6*scale); ctx.stroke();
+    ctx.fillStyle='#c8503c'; ctx.fillRect(cx-21*scale,baseY-12*scale,42*scale,4*scale);
+    // 이름표 (나무 팻말)
+    ctx.fillStyle='#e8d8b8'; rr(cx-40*scale,baseY-80*scale,80*scale,22*scale,5*scale); ctx.fill();
+    ctx.strokeStyle='#8a5a34'; ctx.lineWidth=2; rr(cx-40*scale,baseY-80*scale,80*scale,22*scale,5*scale); ctx.stroke();
     ctx.fillStyle='#1e2a38'; ctx.font=`900 ${Math.round(11*scale)}px sans-serif`;
-    ctx.textAlign='center'; ctx.fillText(currentMenu().kr,cx,baseY-41*scale); ctx.textAlign='left';
+    ctx.textAlign='center'; ctx.fillText(currentMenu().kr,cx,baseY-65*scale); ctx.textAlign='left';
   }
   function drawHachi(){
-    // 게이트 옆 심사위원 하치
-    const cx=W*0.87, r=34*scale;
-    let cy=H*0.5;
-    if (S.mood==='happy'&&S.moodT>0) cy-=Math.abs(Math.sin(S.t*12))*10*scale; // 신나서 점프
+    // 게이트 옆 심사위원장 하치 (시바견)
+    const cx=W*0.87, r=30*scale;
+    let cy=H*0.44;
+    const happy=S.mood==='happy'&&S.moodT>0;
+    const sass=S.mood==='sass'&&S.moodT>0;
+    if (happy) cy-=Math.abs(Math.sin(S.t*12))*10*scale; // 신나서 점프
     ctx.save();
-    if (S.mood==='sass' && S.moodT>0) ctx.translate(Math.sin(S.t*40)*3*scale,0); // 도리도리
+    if (sass) ctx.translate(Math.sin(S.t*40)*3*scale,0); // 도리도리
+    // 꼬리 (기쁠 때 세차게 살랑)
+    const wag=happy?Math.sin(S.t*20)*0.6:Math.sin(S.t*2.2)*0.12;
+    ctx.save(); ctx.translate(cx+r*0.85,cy+r*1.6); ctx.rotate(wag-0.6);
+    ctx.fillStyle='#f0a83c';
+    ctx.beginPath(); ctx.ellipse(r*0.4,0,r*0.48,r*0.22,0,0,7); ctx.fill();
+    ctx.fillStyle='#fdf4e3';
+    ctx.beginPath(); ctx.ellipse(r*0.62,0,r*0.2,r*0.14,0,0,7); ctx.fill();
+    ctx.restore();
+    // 몸통
+    ctx.fillStyle='#f0a83c';
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*1.55,r*0.85,r*0.9,0,0,7); ctx.fill();
+    ctx.fillStyle='#fdf4e3';
+    ctx.beginPath(); ctx.ellipse(cx,cy+r*1.7,r*0.48,r*0.62,0,0,7); ctx.fill();
+    // 앞발
+    ctx.fillStyle='#f0a83c';
+    rr(cx-r*0.52,cy+r*1.95,r*0.32,r*0.5,r*0.14); ctx.fill();
+    rr(cx+r*0.2,cy+r*1.95,r*0.32,r*0.5,r*0.14); ctx.fill();
+    // 머리
     ctx.fillStyle='#f0a83c';
     ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.fill();
-    // 귀
-    ctx.beginPath(); ctx.moveTo(cx-r*0.8,cy-r*0.4); ctx.lineTo(cx-r*0.6,cy-r*1.3); ctx.lineTo(cx-r*0.15,cy-r*0.75); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(cx+r*0.15,cy-r*0.75); ctx.lineTo(cx+r*0.6,cy-r*1.3); ctx.lineTo(cx+r*0.8,cy-r*0.4); ctx.closePath(); ctx.fill();
+    // 귀 (속귀 크림색)
+    for(const s of [-1,1]){
+      ctx.fillStyle='#f0a83c';
+      ctx.beginPath();
+      ctx.moveTo(cx+s*r*0.15,cy-r*0.75);
+      ctx.lineTo(cx+s*r*0.6,cy-r*1.3);
+      ctx.lineTo(cx+s*r*0.8,cy-r*0.4);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#fdf4e3';
+      ctx.beginPath();
+      ctx.moveTo(cx+s*r*0.3,cy-r*0.72);
+      ctx.lineTo(cx+s*r*0.56,cy-r*1.05);
+      ctx.lineTo(cx+s*r*0.66,cy-r*0.5);
+      ctx.closePath(); ctx.fill();
+    }
+    // 주둥이
     ctx.fillStyle='#fdf4e3';
     ctx.beginPath(); ctx.ellipse(cx,cy+r*0.35,r*0.55,r*0.42,0,0,7); ctx.fill();
+    // 눈썹 무늬 (시바 특유의 점눈썹)
+    ctx.fillStyle='#fdf4e3';
+    ctx.beginPath(); ctx.ellipse(cx-r*0.3,cy-r*0.42,r*0.1,r*0.06,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+r*0.3,cy-r*0.42,r*0.1,r*0.06,0,0,7); ctx.fill();
+    // 눈
     ctx.fillStyle='#1e2a38';
-    if (S.mood==='happy'&&S.moodT>0){
+    if (happy){
       ctx.lineWidth=3*scale; ctx.strokeStyle='#1e2a38';
-      ctx.beginPath(); ctx.arc(cx-r*0.3,cy-r*0.15,r*0.14,Math.PI,0); ctx.stroke();
-      ctx.beginPath(); ctx.arc(cx+r*0.3,cy-r*0.15,r*0.14,Math.PI,0); ctx.stroke();
-    } else if (S.mood==='sass'&&S.moodT>0){
-      ctx.fillRect(cx-r*0.42,cy-r*0.2,r*0.26,r*0.08); // 째려봄
-      ctx.fillRect(cx+r*0.16,cy-r*0.2,r*0.26,r*0.08);
+      ctx.beginPath(); ctx.arc(cx-r*0.3,cy-r*0.12,r*0.14,Math.PI,0); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+r*0.3,cy-r*0.12,r*0.14,Math.PI,0); ctx.stroke();
+    } else if (sass){
+      ctx.fillRect(cx-r*0.42,cy-r*0.18,r*0.26,r*0.08); // 째려봄
+      ctx.fillRect(cx+r*0.16,cy-r*0.18,r*0.26,r*0.08);
     } else {
-      ctx.beginPath(); ctx.arc(cx-r*0.3,cy-r*0.15,r*0.11,0,7); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx+r*0.3,cy-r*0.15,r*0.11,0,7); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx-r*0.3,cy-r*0.12,r*0.11,0,7); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+r*0.3,cy-r*0.12,r*0.11,0,7); ctx.fill();
     }
+    // 코 + 입
     ctx.fillStyle='#1e2a38';
     ctx.beginPath(); ctx.arc(cx,cy+r*0.2,r*0.1,0,7); ctx.fill();
-    // 심사위원 리본
-    ctx.fillStyle='#c8503c'; rr(cx-r*0.5,cy+r*0.75,r,r*0.35,4*scale); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font=`900 ${Math.round(9*scale)}px sans-serif`;
-    ctx.textAlign='center'; ctx.fillText('심사위원',cx,cy+r*1.0); ctx.textAlign='left';
+    ctx.strokeStyle='#1e2a38'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cx,cy+r*0.34,r*0.12,0.3,Math.PI-0.3); ctx.stroke();
+    // 볼터치 (기쁠 때)
+    if (happy){
+      ctx.fillStyle='rgba(240,140,110,.5)';
+      ctx.beginPath(); ctx.ellipse(cx-r*0.55,cy+r*0.15,r*0.13,r*0.08,0,0,7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+r*0.55,cy+r*0.15,r*0.13,r*0.08,0,0,7); ctx.fill();
+    }
+    // 빨간 반다나 + 八
+    ctx.fillStyle='#c8503c';
+    ctx.beginPath();
+    ctx.moveTo(cx-r*0.72,cy+r*0.72);
+    ctx.quadraticCurveTo(cx,cy+r*0.95,cx+r*0.72,cy+r*0.72);
+    ctx.lineTo(cx,cy+r*1.4);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fdf4e3'; ctx.font=`900 ${Math.round(r*0.32)}px sans-serif`;
+    ctx.textAlign='center'; ctx.fillText('八',cx,cy+r*1.12); ctx.textAlign='left';
     ctx.restore();
+    // 나무 팻말: 심사위원장
+    ctx.fillStyle='#e8d8b8'; rr(cx-r*1.05,cy+r*2.35,r*2.1,r*0.55,4*scale); ctx.fill();
+    ctx.strokeStyle='#8a5a34'; ctx.lineWidth=2; rr(cx-r*1.05,cy+r*2.35,r*2.1,r*0.55,4*scale); ctx.stroke();
+    ctx.fillStyle='#1e2a38'; ctx.font=`900 ${Math.round(r*0.3)}px sans-serif`;
+    ctx.textAlign='center'; ctx.fillText('심사위원장',cx,cy+r*2.74); ctx.textAlign='left';
     // 멘트 말풍선
     if (sassT>0){
       ctx.fillStyle='#fff';
-      rr(cx-160*scale,cy-r*2.4,180*scale,34*scale,10*scale); ctx.fill();
-      ctx.strokeStyle='#1e2a38'; ctx.lineWidth=2; rr(cx-160*scale,cy-r*2.4,180*scale,34*scale,10*scale); ctx.stroke();
+      rr(cx-190*scale,cy-r*2.5,196*scale,34*scale,10*scale); ctx.fill();
+      ctx.strokeStyle='#1e2a38'; ctx.lineWidth=2; rr(cx-190*scale,cy-r*2.5,196*scale,34*scale,10*scale); ctx.stroke();
       ctx.fillStyle='#c8503c'; ctx.font=`900 ${Math.round(12*scale)}px sans-serif`;
-      ctx.textAlign='center'; ctx.fillText(sassText,cx-70*scale,cy-r*2.4+22*scale); ctx.textAlign='left';
+      ctx.textAlign='center'; ctx.fillText(sassText,cx-92*scale,cy-r*2.5+22*scale); ctx.textAlign='left';
     }
-    if (S.mood==='happy'&&S.moodT>0){
+    if (happy){
       ctx.font=`${Math.round(22*scale)}px sans-serif`;
-      ctx.fillText('✨ PASS!',cx-60*scale,cy-r*1.6);
+      ctx.fillText('✨ PASS!',cx-60*scale,cy-r*1.7);
     }
   }
 
@@ -727,6 +918,7 @@
     drawBG(camDrawn); drawBelt(); drawBowl(); drawHachi();
     updateConfetti();
     drawStamp();
+    drawGauge();
     ctx.restore();
     if (flashT>0){ // 판정 플래시
       ctx.fillStyle=flashColor+(flashT*1.4)+')';
@@ -737,11 +929,12 @@
     if (shakeT>0) shakeT-=dt;
     if (flashT>0) flashT-=dt;
     if (stampT>0) stampT-=dt;
+    if (gaugeT>0) gaugeT-=dt;
     if (!S.playing) return;
 
     S.t+=dt;
     const gx=W*0.74;
-    // 그릇 이동 (듣는 동안엔 거의 정지)
+    // 그릇 이동
     const spd=(34+S.passed*7)*scale*S.speed;
     if (S.gateOpen>=1){
       S.bowlX+=spd*4*dt; // 통과 가속
@@ -762,11 +955,11 @@
     sfxGameOver();
     failEl.innerHTML = S.heardLast
       ? '마지막으로 하치가 들은 말:<br>"<b>'+S.heardLast+'</b>" ...였습니다 🫠'
-      : '아무 말도 못 하고 게이트에 도착했다...';
-    finalEl.textContent=S.passed+'개 통과';
+      : '아무 말도 못 하고 게이트에 도착했다... (다음엔 NO!NO!NO!를 외쳐요)';
+    finalEl.textContent=S.passed+'개 통과 · SCORE '+S.score;
     resultBox.classList.remove('hidden');
     overlay.querySelector('h1').textContent='검문 탈락...! 😤';
-    overlay.querySelector('.sub').innerHTML='하치: "발음 연습 다시 하고 오세요"<br>친구에게 도전장을 내밀어 보세요!';
+    overlay.querySelector('.sub').innerHTML='하치: "발음 연습 다시 하고 오세요"<br>친구에게 점수로 도전장을 내밀어 보세요!';
     btn.textContent='다시 도전';
     overlay.classList.remove('hidden');
   }
