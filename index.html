@@ -47,7 +47,9 @@
     <div class="sub">
       컨베이어벨트 위 돈부리가 검문 게이트로 갑니다.<br>
       메뉴 이름을 <b>영어 발음</b>으로 정확히 말해야 게이트가 열립니다!<br>
-      하치 심사위원이 아주... 깐깐합니다 😤
+      하치 심사위원이 아주... 깐깐합니다 😤<br>
+      📷 카메라를 허용하면 <b>일본식 필터</b>를 쓴 내 얼굴이 나옵니다.<br>
+      (얼굴을 톡 누르면 필터가 바뀌어요)
     </div>
     <div id="resultBox" class="hidden">
       <div id="failMsg" style="font-size:14px;margin-bottom:6px;line-height:1.6;"></div>
@@ -102,6 +104,8 @@
   // ---------- 상태 ----------
   const S={playing:false,idx:0,passed:0,t:0,speed:1,bowlX:0,gateOpen:0,mood:'normal',moodT:0,tries:0,heardLast:''};
   let dt=0,last=0;
+  let shakeT=0, flashT=0, flashColor='rgba(200,80,60,';
+  const confetti=[];
 
   function currentMenu(){ return MENUS[S.idx%MENUS.length]; }
   function newBowl(){
@@ -114,6 +118,193 @@
   function reset(){
     S.idx=0; S.passed=0; S.t=0; S.speed=1; S.mood='normal';
     newBowl();
+  }
+
+  // ---------- 사운드 (WebAudio 합성 — 파일 없이 동작) ----------
+  let AC=null;
+  function audioCtx(){
+    if(!AC){ const C=window.AudioContext||window.webkitAudioContext; if(C) AC=new C(); }
+    if(AC&&AC.state==='suspended') AC.resume();
+    return AC;
+  }
+  function tone(freq,delay,dur,opt){
+    const ac=audioCtx(); if(!ac) return;
+    const o=opt||{};
+    const t0=ac.currentTime+delay;
+    const osc=ac.createOscillator(), g=ac.createGain();
+    osc.type=o.type||'square';
+    osc.frequency.setValueAtTime(freq,t0);
+    if(o.slideTo) osc.frequency.exponentialRampToValueAtTime(o.slideTo,t0+dur);
+    const vol=o.vol||0.12;
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(vol,t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+    osc.connect(g); g.connect(ac.destination);
+    osc.start(t0); osc.stop(t0+dur+0.1);
+  }
+  function bark(delay,pitch){ // 시바견 "왕!"
+    tone(480*pitch,delay,0.1,{type:'sawtooth',vol:0.22,slideTo:150*pitch});
+    tone(240*pitch,delay+0.012,0.1,{type:'square',vol:0.12,slideTo:90*pitch});
+  }
+  function sfxPass(){
+    tone(880,0,0.12,{vol:0.14}); tone(1318,0.13,0.22,{vol:0.14});
+    bark(0.34,1.3); // 신난 왕!
+  }
+  function sfxFail(){
+    tone(200,0,0.28,{type:'sawtooth',vol:0.16,slideTo:100}); // 킹받는 부저
+    bark(0.12,0.8); bark(0.3,0.72); // 왕! 왕! (저음 2연타)
+    tone(659,0.5,0.14,{type:'triangle',vol:0.1,slideTo:415}); // "응~ 아니야~" 하강음
+  }
+  function sfxGameOver(){
+    [392,370,349,311].forEach((f,i)=>tone(f,i*0.27,0.26,{type:'sawtooth',vol:0.12,slideTo:f*0.96}));
+    bark(1.25,0.65);
+  }
+
+  // ---------- 카메라 + 일본식 필터 ----------
+  let camVideo=null, camOn=false, camTried=false;
+  const FILTERS=['하치마키 必勝','스시 대장','시바 변신'];
+  let filterIdx=0;
+  async function ensureCam(){
+    if(camOn||camTried) return;
+    camTried=true;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return;
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:480}},audio:false});
+      camVideo=document.createElement('video');
+      camVideo.srcObject=stream; camVideo.muted=true;
+      camVideo.setAttribute('playsinline','');
+      camVideo.playsInline=true;
+      await camVideo.play();
+      camOn=true;
+    }catch(e){ camOn=false; }
+  }
+  function camPos(){ const r=54*scale; return {cx:r+14, cy:H-r-16, r}; }
+  let stamp=null, stampT=0;
+  function showStamp(text,color){ stamp={text,color}; stampT=1.4; }
+
+  function drawFilter(cx,cy,r){
+    ctx.save();
+    if (filterIdx===0){ // 하치마키 必勝
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.clip();
+      const by=cy-r*0.52, bh=r*0.34;
+      ctx.fillStyle='#fff'; ctx.fillRect(cx-r,by,r*2,bh);
+      ctx.strokeStyle='#d9d2c0'; ctx.lineWidth=1.5; ctx.strokeRect(cx-r,by,r*2,bh);
+      ctx.fillStyle='#c8503c';
+      ctx.beginPath(); ctx.arc(cx,by+bh/2,bh*0.34,0,7); ctx.fill();
+      ctx.font=`900 ${Math.round(bh*0.6)}px sans-serif`; ctx.textAlign='center';
+      ctx.fillText('必',cx-r*0.5,by+bh*0.75);
+      ctx.fillText('勝',cx+r*0.5,by+bh*0.75);
+    } else if (filterIdx===1){ // 스시 대장: 두건 + 콧수염
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.clip();
+      ctx.fillStyle='#2b4a8b';
+      ctx.beginPath();
+      ctx.moveTo(cx-r,cy-r*0.28);
+      ctx.quadraticCurveTo(cx,cy-r*1.5,cx+r,cy-r*0.28);
+      ctx.lineTo(cx+r,cy-r); ctx.lineTo(cx-r,cy-r);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font=`900 ${Math.round(r*0.42)}px sans-serif`;
+      ctx.textAlign='center'; ctx.fillText('寿',cx,cy-r*0.52);
+      // 콧수염
+      ctx.strokeStyle='#1e2a38'; ctx.lineWidth=r*0.09; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(cx-r*0.04,cy+r*0.3); ctx.quadraticCurveTo(cx-r*0.3,cy+r*0.18,cx-r*0.45,cy+r*0.34); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+r*0.04,cy+r*0.3); ctx.quadraticCurveTo(cx+r*0.3,cy+r*0.18,cx+r*0.45,cy+r*0.34); ctx.stroke();
+    } else { // 시바 변신: 귀 + 코 + 볼터치
+      // 귀는 원 밖에 그림 (클립 없음)
+      ctx.fillStyle='#f0a83c';
+      ctx.beginPath(); ctx.moveTo(cx-r*0.75,cy-r*0.55); ctx.lineTo(cx-r*0.62,cy-r*1.25); ctx.lineTo(cx-r*0.12,cy-r*0.85); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx+r*0.12,cy-r*0.85); ctx.lineTo(cx+r*0.62,cy-r*1.25); ctx.lineTo(cx+r*0.75,cy-r*0.55); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#fdf4e3';
+      ctx.beginPath(); ctx.moveTo(cx-r*0.6,cy-r*0.62); ctx.lineTo(cx-r*0.55,cy-r*1.05); ctx.lineTo(cx-r*0.25,cy-r*0.8); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx+r*0.25,cy-r*0.8); ctx.lineTo(cx+r*0.55,cy-r*1.05); ctx.lineTo(cx+r*0.6,cy-r*0.62); ctx.closePath(); ctx.fill();
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.clip();
+      // 코 + 수염
+      ctx.fillStyle='#1e2a38';
+      ctx.beginPath(); ctx.ellipse(cx,cy+r*0.22,r*0.13,r*0.09,0,0,7); ctx.fill();
+      ctx.strokeStyle='rgba(30,42,56,.85)'; ctx.lineWidth=2; ctx.lineCap='round';
+      [-0.12,0,0.12].forEach(dy=>{
+        ctx.beginPath(); ctx.moveTo(cx-r*0.25,cy+r*(0.2+dy)); ctx.lineTo(cx-r*0.62,cy+r*(0.14+dy*1.6)); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+r*0.25,cy+r*(0.2+dy)); ctx.lineTo(cx+r*0.62,cy+r*(0.14+dy*1.6)); ctx.stroke();
+      });
+      // 볼터치
+      ctx.fillStyle='rgba(240,140,110,.5)';
+      ctx.beginPath(); ctx.ellipse(cx-r*0.5,cy+r*0.1,r*0.15,r*0.1,0,0,7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+r*0.5,cy+r*0.1,r*0.15,r*0.1,0,0,7); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function drawCam(){
+    const {cx,cy,r}=camPos();
+    if(!(camOn&&camVideo&&camVideo.readyState>=2)) return;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.clip();
+    const vw=camVideo.videoWidth||480, vh=camVideo.videoHeight||360;
+    const s=Math.max((r*2)/vw,(r*2)/vh)*1.15;
+    ctx.translate(cx,cy); ctx.scale(-1,1); // 거울 모드
+    ctx.drawImage(camVideo,-vw*s/2,-vh*s/2,vw*s,vh*s);
+    ctx.restore();
+    drawFilter(cx,cy,r);
+    ctx.strokeStyle='#1e2a38'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.stroke();
+    // 필터 이름표
+    ctx.fillStyle='#1e2a38'; ctx.font=`900 ${Math.round(10*scale)}px sans-serif`;
+    ctx.textAlign='center';
+    ctx.fillText(FILTERS[filterIdx]+' (톡!)',cx,cy+r+14*scale);
+    ctx.textAlign='left';
+  }
+  function drawStamp(){
+    if(stampT<=0||!stamp) return;
+    const p=camPos();
+    const sx=camOn?p.cx:W*0.4, sy=camOn?p.cy:H*0.4;
+    const pop=stampT>1.2?(1.4-stampT)*5+0.3:1; // 쾅 찍히는 팝
+    ctx.save();
+    ctx.translate(sx,sy); ctx.rotate(-0.22); ctx.scale(pop,pop);
+    ctx.globalAlpha=Math.min(1,stampT*1.8);
+    ctx.font=`900 ${Math.round(22*scale)}px sans-serif`;
+    const tw=ctx.measureText(stamp.text).width;
+    ctx.strokeStyle=stamp.color; ctx.lineWidth=3.5;
+    ctx.strokeRect(-tw/2-9,-19*scale,tw+18,38*scale);
+    ctx.fillStyle=stamp.color; ctx.textAlign='center';
+    ctx.fillText(stamp.text,0,8*scale);
+    ctx.restore();
+  }
+  // 얼굴(카메라) 탭 → 필터 변경
+  cv.addEventListener('pointerdown',e=>{
+    const rect=cv.getBoundingClientRect();
+    const x=e.clientX-rect.left, y=e.clientY-rect.top;
+    const {cx,cy,r}=camPos();
+    if(camOn&&Math.hypot(x-cx,y-cy)<r+10){
+      filterIdx=(filterIdx+1)%FILTERS.length;
+      bark(0,1.15);
+    }
+  });
+
+  // ---------- 폭죽 ----------
+  const CONF_COLORS=['#f0a83c','#c8503c','#3a9b5c','#5b7fa6','#fff'];
+  function spawnConfetti(x,y){
+    for(let i=0;i<26;i++){
+      confetti.push({
+        x,y,
+        vx:(Math.random()-0.5)*260*scale,
+        vy:(-Math.random()*220-60)*scale,
+        s:(Math.random()*5+3)*scale,
+        c:CONF_COLORS[i%CONF_COLORS.length],
+        rot:Math.random()*6, vr:(Math.random()-0.5)*10,
+        life:1.2+Math.random()*0.5
+      });
+    }
+  }
+  function updateConfetti(){
+    for(let i=confetti.length-1;i>=0;i--){
+      const p=confetti[i];
+      p.life-=dt; if(p.life<=0){ confetti.splice(i,1); continue; }
+      p.vy+=560*scale*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.rot+=p.vr*dt;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.globalAlpha=Math.min(1,p.life);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6);
+      ctx.restore();
+    }
   }
 
   // ---------- 판정 ----------
@@ -150,10 +341,18 @@
     if (isMatch(heard)){
       heardEl.textContent='🟢 "'+heard+'" — 통과!';
       S.gateOpen=1; S.mood='happy'; S.moodT=1.2;
+      sfxPass();
+      showStamp('合格','#3a9b5c');
+      flashColor='rgba(58,155,92,'; flashT=0.22;
+      spawnConfetti(W*0.74,H*0.4);
     } else {
       S.tries++;
       heardEl.textContent='🔴 "'+heard+'" ...라고 들렸어요';
       S.mood='sass'; S.moodT=1.2;
+      sfxFail();
+      showStamp('不合格','#c8503c');
+      flashColor='rgba(200,80,60,'; flashT=0.32;
+      shakeT=0.45;
       showSass();
     }
   }
@@ -229,8 +428,8 @@
   // ---------- 그리기 ----------
   function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
   function drawBG(){
-    ctx.fillStyle='#f5efe0'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#1e2a38'; ctx.fillRect(0,0,W,H*0.1);
+    ctx.fillStyle='#f5efe0'; ctx.fillRect(-20,-20,W+40,H+40);
+    ctx.fillStyle='#1e2a38'; ctx.fillRect(-20,-20,W+40,H*0.1+20);
     ctx.fillStyle='#f5efe0'; ctx.font=`900 ${Math.round(13*scale)}px sans-serif`;
     ctx.fillText('HACHIRO 발음 검문소 丼  ·  통과 '+S.passed+'개', 12, H*0.065);
   }
@@ -271,7 +470,9 @@
   }
   function drawHachi(){
     // 게이트 옆 심사위원 하치
-    const cx=W*0.87, cy=H*0.5, r=34*scale;
+    const cx=W*0.87, r=34*scale;
+    let cy=H*0.5;
+    if (S.mood==='happy'&&S.moodT>0) cy-=Math.abs(Math.sin(S.t*12))*10*scale; // 신나서 점프
     ctx.save();
     if (S.mood==='sass' && S.moodT>0) ctx.translate(Math.sin(S.t*40)*3*scale,0); // 도리도리
     ctx.fillStyle='#f0a83c';
@@ -303,7 +504,6 @@
     // 멘트 말풍선
     if (sassT>0){
       ctx.fillStyle='#fff';
-      const tw=ctx.measureText(sassText).width;
       rr(cx-160*scale,cy-r*2.4,180*scale,34*scale,10*scale); ctx.fill();
       ctx.strokeStyle='#1e2a38'; ctx.lineWidth=2; rr(cx-160*scale,cy-r*2.4,180*scale,34*scale,10*scale); ctx.stroke();
       ctx.fillStyle='#c8503c'; ctx.font=`900 ${Math.round(12*scale)}px sans-serif`;
@@ -321,9 +521,23 @@
     dt=Math.min((ts-last)/1000,0.033); last=ts;
     if(!W) resize();
     ctx.clearRect(0,0,W,H);
-    drawBG(); drawBelt(); drawBowl(); drawHachi();
+    ctx.save();
+    if (shakeT>0){ // 틀렸을 때 화면 흔들림
+      ctx.translate((Math.random()-0.5)*10*scale*shakeT*2,(Math.random()-0.5)*10*scale*shakeT*2);
+    }
+    drawBG(); drawBelt(); drawBowl(); drawHachi(); drawCam();
+    updateConfetti();
+    drawStamp();
+    ctx.restore();
+    if (flashT>0){ // 판정 플래시
+      ctx.fillStyle=flashColor+(flashT*1.4)+')';
+      ctx.fillRect(0,0,W,H);
+    }
     if (S.moodT>0) S.moodT-=dt;
     if (sassT>0) sassT-=dt;
+    if (shakeT>0) shakeT-=dt;
+    if (flashT>0) flashT-=dt;
+    if (stampT>0) stampT-=dt;
     if (!S.playing) return;
 
     S.t+=dt;
@@ -346,6 +560,7 @@
   function gameOver(){
     S.playing=false;
     if(rec&&listening){ try{rec.stop();}catch(e){} }
+    sfxGameOver();
     failEl.innerHTML = S.heardLast
       ? '마지막으로 하치가 들은 말:<br>"<b>'+S.heardLast+'</b>" ...였습니다 🫠'
       : '아무 말도 못 하고 게이트에 도착했다...';
@@ -362,6 +577,8 @@
     resize();
     overlay.classList.add('hidden');
     S.playing=true;
+    audioCtx();     // 사용자 제스처로 오디오 활성화
+    ensureCam();    // 카메라 켜기 (허용 시 필터 얼굴 표시)
     if (!SR) enableTypeMode();
   }
   btn.addEventListener('click',startGame);
